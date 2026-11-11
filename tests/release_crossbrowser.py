@@ -189,7 +189,9 @@ async def check(browser_type, name, url, reportdir):
         }''',timeout=20000)
         outcomes['phase']='local cinematic reel / Optical Loupe sprite'
         canvas=page.locator('#prism-mount canvas.prism-loupe-sprite-preview')
-        await canvas.wait_for(timeout=10000)
+        # The loupe canvas exists while the seek rail is idle but is
+        # intentionally hidden until the viewer interacts with the rail.
+        await canvas.wait_for(state='attached',timeout=10000)
         rail=page.locator('#prism-mount .prism-rail')
         async def pointer_at(frac):
             await rail.evaluate('''(el,p)=>{
