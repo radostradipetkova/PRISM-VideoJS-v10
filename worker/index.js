@@ -42,14 +42,18 @@ async function muxChapters(request,env){
     const asset=await muxRequest(`/video/v1/assets/${encodeURIComponent(lookup.object.id)}`,authorization);
     const publicPlayback=asset?.playback_ids?.some(x=>x.id===id && x.policy==='public');
     if(!publicPlayback)return json({chapters:[],source:'not-public'},403);
+    // Mux's asset duration is authoritative even before a custom video
+    // element has propagated its metadata to the browser.
+    const assetDuration=Number(asset?.duration);
+    const duration=Number.isFinite(assetDuration)&&assetDuration>0?assetDuration:null;
     const track=asset?.tracks?.find(x=>x.type==='text'&&x.text_type==='chapters'&&x.status==='ready');
-    if(!track)return json({chapters:[],source:'awaiting-chapters'},200,30);
+    if(!track)return json({chapters:[],duration,source:'awaiting-chapters'},200,30);
     const res=await fetch(`https://stream.mux.com/${id}/chapters/${encodeURIComponent(track.id)}.json`,{
       signal:AbortSignal.timeout(9000)
     });
     if(!res.ok)throw new Error(`Mux chapters delivery failed (${res.status})`);
     const chapters=normalizeMuxChapters(await res.json());
-    return json({chapters,source:'mux-chapter-track'},200,chapters.length?180:30);
+    return json({chapters,duration,source:'mux-chapter-track'},200,chapters.length?180:30);
   }catch(_){
     // Never expose API tokens, upstream responses or internal account details.
     return json({chapters:[],source:'temporarily-unavailable'},200,15);

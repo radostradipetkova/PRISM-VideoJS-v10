@@ -39,3 +39,21 @@ test('Mux bridge preserves static Cloudflare asset serving and scopes API routin
     assert.ok(content.includes('muxChapters=normalizeChapters(body.chapters)'));
   }
 });
+
+test('Mux bridge exposes verified duration for pre-metadata Optical Index',()=>{
+ const code=readFileSync(new URL('../worker/index.js',import.meta.url),'utf8');
+ assert.match(code,/const assetDuration=Number\(asset\?\.duration\)/);
+ assert.match(code,/chapters:\[\],duration,source:'awaiting-chapters'/);
+ assert.match(code,/chapters,duration,source:'mux-chapter-track'/);
+});
+test('Optical Index stays available and switches from time markers to Mux chapters',()=>{
+ for(const file of ['src/optical-touch.js','skin/optical-touch.js']){
+  const code=readFileSync(new URL('../'+file,import.meta.url),'utf8');
+  assert.match(code,/launch\.hidden=chapterMode==='none'/);
+  assert.match(code,/checkMuxChapterTrack/);
+  assert.match(code,/muxDuration=verifiedDuration/);
+  assert.match(code,/muxChapters=remote/);
+  assert.match(code,/clearTimeout\(muxChapterTimer\)/);
+  assert.match(code,/AI CHAPTERS PROCESSING/);
+ }
+});

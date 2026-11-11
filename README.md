@@ -180,3 +180,8 @@ Inside Player Settings, **09 / Video Fit** switches between **Fit** (default: co
 ## Live-action chapters and automatic Mux navigation
 
 The **LIVE ACTION** option now has a working optical frame preview and a cinematic Explore index. Any public Mux asset can be previewed with `?liveMux=PLAYBACK_ID`. To enable real AI-authored chapter tracks for every Mux upload, see [Mux Robots chapter integration](docs/MUX-AI-CHAPTERS.md); until configured, PRISM uses transcript or time-based navigation rather than pretending to detect scenes.
+
+
+## Mux AI chapters (opt-in)
+
+The Explore Optical Index now stays usable while remote metadata loads. To automatically produce **real AI chapter titles** for newly ingested Mux videos, configure a Mux Robots Directive for speech captions → chapter generation. Full setup and security notes: [Mux AI Chapters](docs/MUX-AI-CHAPTERS.md). This integration requires your Mux API credentials and explicit directive attachment per upload; it is not activated merely by deploying this source.

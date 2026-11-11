@@ -23,7 +23,7 @@ test('the main captions menu and descriptive WebVTT remain exposed in the Mux ve
 });
 test('Mux does not disable film buttons or the real-media cinematic chapters',()=>{
  assert.doesNotMatch(app,/if\(muxId\)\{[\s\S]*?chapters\.hidden=true/);
- assert.match(app,/btn\.addEventListener\('click',\(\)=>load\(btn\.dataset\.film\)\)/);
+ assert.match(app,/btn\.addEventListener\('click',\(\)=>selectFilm\(btn\.dataset\.film\)\)/);
  assert.match(app,/const goal=Number\(b\.dataset\.chapter\)\*8\+0\.3/);
  assert.match(app,/media\.currentTime=target/);
 });

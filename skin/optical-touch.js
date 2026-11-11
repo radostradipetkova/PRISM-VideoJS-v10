@@ -77,6 +77,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   const search=skin.querySelector('.prism-index-search');
   const resultCount=skin.querySelector('.prism-index-result-count');
   const emptyResults=skin.querySelector('.prism-index-empty');
+  const indexHelp=skin.querySelector('.prism-chapter-dialog-help');
   const irisThumbnail=skin.querySelector('.prism-iris-thumbnail');
   const irisLabel=skin.querySelector('.prism-iris-label');
   const hud=skin.querySelector('.prism-gesture-feedback');
@@ -100,6 +101,10 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   let pulseTimer=0;
   let fetchedChapters=[];
   let muxChapters=[];
+  let muxDuration=0;
+  let muxChapterStatus='';
+  let muxChapterTimer=null;
+  let muxChapterAttempts=0;
   let fetchedCaptions=[];
   let destroyed=false;
   const abortTracks=new AbortController();
@@ -115,7 +120,13 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   function vibrate(){
     try{if(navigator.vibrate)navigator.vibrate(9);}catch(_){/* optional haptic */}
   }
-  function duration(){return Number(media.duration)||0;}
+  function duration(){
+    const reported=Number(media.duration);
+    if(Number.isFinite(reported)&&reported>0)return reported;
+    // A remote Mux asset may be ready before its custom media element
+    // exposes duration. Use server-verified metadata for navigation only.
+    return muxDuration;
+  }
   function chapterOf(time){return chapterAtTime(entries,time);}
   function updateChapterIndex(time=Number(media.currentTime)||0){
     const index=chapterOf(time);
@@ -210,6 +221,20 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
         : `${entries.length} navigation points available`;
     }
   }
+  function updateIndexHelp(){
+    if(!indexHelp)return;
+    if(muxChapterStatus==='awaiting-chapters'){
+      indexHelp.textContent='AI CHAPTERS PROCESSING · TIME MARKERS ARE AVAILABLE · SELECT TO SEEK';
+    }else if(muxChapterStatus==='not-configured'){
+      indexHelp.textContent='TIME MARKERS ONLY · MUX CHAPTER GENERATION NOT CONFIGURED';
+    }else if(muxChapterStatus==='mux-chapter-track' && entryType==='chapters'){
+      indexHelp.textContent='MUX CHAPTERS READY · SELECT A CHAPTER TO SEEK · ESC TO CLOSE';
+    }else if(entryType==='time'){
+      indexHelp.textContent='TIME MARKERS ONLY · NO SCENE LABELS INVENTED · ESC TO CLOSE';
+    }else{
+      indexHelp.textContent='SELECT A FRAME TO SEEK · ESC TO CLOSE';
+    }
+  }
   function renderIndex(){
     // Explore is a permanent navigation control. Do not hide it merely
     // because the video/remote Mux metadata has not finished loading.
@@ -242,6 +267,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     }
     if(resultCount)resultCount.textContent=entries.length?'':
       'Navigation will update automatically when chapter or video metadata arrives.';
+    updateIndexHelp();
     updateChapterIndex();
     if(entries.length)previewChapter(Math.max(0,chapterOf(Number(media.currentTime)||0)));
     syncLoupe(Number(media.currentTime)||0);
@@ -271,7 +297,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
       skin.dispatchEvent(new CustomEvent('prism:indexchange',{
         detail:{type:entryType,entries:entries.map(c=>({...c}))}
       }));
-    }else renderTicks();
+    }else {renderTicks();updateIndexHelp();}
   }
   // Force native chapter tracks to load while keeping their cues visually hidden.
   // Native cues are preferred; fetching the VTT is a fallback for custom media tags.
@@ -291,19 +317,45 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
         }).catch(()=>{/* native tracks may still load */});
     }
   }
-  // Optional AI-authoritative chapters, attached to Mux by Robots Directives.
-  // A same-origin Worker endpoint securely reads only public chapter metadata.
-  // If Mux AI is not configured, transcript/time navigation still works.
-  if(chapterMode==='smart' && muxPlaybackId && /^[A-Za-z0-9]+$/.test(muxPlaybackId)){
+  // The Mux Robots Directive generates chapters during ingest, NOT when a
+  // visitor loads this page. Poll the read-only bridge for assets without an
+  // authored track; display time markers until real chapter metadata arrives.
+  // Never expose Mux API credentials or run billable jobs from the player.
+  if(chapterMode==='smart' && muxPlaybackId && /^[A-Za-z0-9]+$/.test(muxPlaybackId)
+     && !chapters.length && !chapterTags.length){
     const url=new URL('/api/mux/chapters',location.origin);
     url.searchParams.set('playback_id',muxPlaybackId);
-    fetch(url,{signal:abortTracks.signal})
-      .then(response=>response.ok?response.json():null)
-      .then(body=>{
-        if(destroyed || !body?.chapters?.length)return;
-        muxChapters=normalizeChapters(body.chapters);
+    async function checkMuxChapterTrack(){
+      if(destroyed || abortTracks.signal.aborted)return;
+      muxChapterAttempts++;
+      let retry=false;
+      try{
+        const response=await fetch(url,{signal:abortTracks.signal,cache:'no-store'});
+        if(!response.ok)throw new Error('Mux chapter metadata request failed');
+        const body=await response.json();
+        if(destroyed)return;
+        const verifiedDuration=Number(body?.duration);
+        if(Number.isFinite(verifiedDuration)&&verifiedDuration>0)muxDuration=verifiedDuration;
+        muxChapterStatus=typeof body?.source==='string'?body.source:'';
+        const remote=normalizeChapters(body?.chapters);
+        if(remote.length){
+          muxChapters=remote;
+          refreshIndex();
+          return;
+        }
         refreshIndex();
-      }).catch(()=>{/* Verified timestamp fallback remains available. */});
+        retry=muxChapterStatus==='awaiting-chapters'||muxChapterStatus==='temporarily-unavailable';
+      }catch(_){
+        if(destroyed||abortTracks.signal.aborted)return;
+        retry=true;
+      }
+      if(retry && muxChapterAttempts<12){
+        // Avoid hammering the Mux API and stop polling after a bounded period.
+        const delay=Math.min(45000,15000+(muxChapterAttempts-1)*5000);
+        muxChapterTimer=setTimeout(checkMuxChapterTrack,delay);
+      }
+    }
+    checkMuxChapterTrack();
   }
   // In smart mode, subtitle timestamps can identify useful dialogue beats
   // without claiming AI scene recognition or fabricating authored chapters.
@@ -576,6 +628,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     destroy(){
     destroyed=true;
     abortTracks.abort();
+    clearTimeout(muxChapterTimer);
     framePreview.destroy();
     closeDialog();
     onTouchCancel();
