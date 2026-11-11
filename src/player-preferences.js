@@ -7,7 +7,7 @@ const modes = new Set(['glass', 'solid']);
 const captionSizes = new Set(['small','medium','large']);
 const captionBackgrounds = new Set(['transparent','solid']);
 const videoFits = new Set(['fit','fill']);
-const captionPixels = Object.freeze({small:'14px',medium:'17px',large:'22px'});
+const captionPixels = Object.freeze({small:'18px',medium:'21px',large:'26px'});
 export function normalizePreferences(value={}) {
   return {
     surface: modes.has(value?.surface) ? value.surface : null,

@@ -53,7 +53,7 @@ test('both stylesheets style native WebVTT cues and exported Mux video cues',asy
     const css=await read(path);
     assert.match(css,/\.prism-skin video::cue,/);
     assert.match(css,/\.prism-skin mux-video::part\(video\)::cue/);
-    assert.match(css,/--prism-caption-font-size,17px/);
+    assert.match(css,/--prism-caption-font-size,21px/);
     assert.match(css,/--prism-caption-background,rgba/);
     assert.match(css,/\.prism-caption-preview/);
     assert.match(css,/\.prism-caption-size-choices button/);
@@ -70,4 +70,19 @@ test('caption styling does not hide or replace Video.js native caption track sel
   }
   const packed=await read('scripts/package-skin.mjs');
   assert.match(packed,/player-preferences\.js/);
+});
+
+
+test('Caption sizes are clearly legible and the preview reflects the real font size',async()=>{
+ const values={small:18,medium:21,large:26};
+ assert.ok(values.small<values.medium&&values.medium<values.large);
+ for(const tree of ['src','skin']){
+  const preferences=await read(tree+'/player-preferences.js');
+  const css=await read(tree==='src'?'src/styles.css':'skin/prism-skin.css');
+  assert.match(preferences,/captionPixels\s*=\s*Object\.freeze\(\{small:'18px',medium:'21px',large:'26px'\}\)/);
+  assert.match(preferences,/setProperty\('--prism-caption-font-size',captionPixels\[effective\.captionSize\]\)/);
+  assert.match(css,/font-size:var\(--prism-caption-font-size,21px\)/);
+  assert.doesNotMatch(css,/font-size:min\(var\(--prism-caption-font-size,21px\),18px\)/);
+  assert.match(css,/mux-video::part\(video\)::cue/);
+ }
 });

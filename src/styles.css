@@ -1268,7 +1268,7 @@
   background-color:var(--prism-caption-background,rgba(5,8,12,.92));
   font-weight:600;
   font-family:Arial,Helvetica,sans-serif;
-  font-size:var(--prism-caption-font-size,17px);
+  font-size:var(--prism-caption-font-size,21px);
   line-height:1.35;
   text-shadow:var(--prism-caption-shadow,none);
 }
@@ -1284,7 +1284,7 @@
 }
 .prism-skin .prism-caption-sample{
   max-width:100%;padding:3px 6px;text-align:center;overflow-wrap:anywhere;
-  font:600 var(--prism-caption-font-size,17px)/1.35 Arial,Helvetica,sans-serif;
+  font:600 var(--prism-caption-font-size,21px)/1.35 Arial,Helvetica,sans-serif;
   color:#fffdf7;background:var(--prism-caption-background,rgba(5,8,12,.92));
   text-shadow:var(--prism-caption-shadow,none);
 }
@@ -1395,7 +1395,7 @@
 .prism-skin .prism-caption-appearance .prism-preferences-choices button{box-sizing:border-box;min-width:0;min-height:44px;padding:4px 2px;border:1px solid #afa69c;background:#efebe4;color:#272926;font:700 10px/1.15 'Courier New',monospace;cursor:pointer}
 .prism-skin .prism-caption-appearance .prism-preferences-choices button[aria-pressed="true"]{border-color:#9e4d32;background:#e27651;color:#1d211e}
 .prism-skin .prism-caption-appearance .prism-caption-preview{min-height:54px;margin-top:10px;padding:6px 8px;align-items:center;border-color:#8f9fa6}
-.prism-skin .prism-caption-appearance .prism-caption-sample{font-size:min(var(--prism-caption-font-size,17px),18px)}
+.prism-skin .prism-caption-appearance .prism-caption-sample{font-size:var(--prism-caption-font-size,21px)}
 .prism-skin .prism-caption-track-status{padding:0 8px;color:#99412b;font:600 11px/1.4 Arial,sans-serif}
 .prism-skin .prism-caption-track-status:empty{display:none}
 @container (max-width:360px){.prism-skin .prism-captions-menu{width:min(270px,calc(100cqw - 10px));min-width:0;padding:7px}}
