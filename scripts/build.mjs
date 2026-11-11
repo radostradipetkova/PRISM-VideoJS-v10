@@ -17,7 +17,7 @@ const releaseAssets=['mark.svg','prism-cinematic.mp4','prism-cinematic.jpg','pri
  'night-city.mp4','night-city.jpg','night-city.vtt',
  'coast-sunrise.mp4','coast-sunrise.jpg','coast-sunrise.vtt',
  'prism-cinematic-storyboard.jpg','prism-cinematic-storyboard.vtt','prism-cinematic-chapters.vtt',
- 'tears-of-steel-fallback.svg','tears-of-steel-full.vtt',
+ 'tears-of-steel-fallback.svg','tears-of-steel-full.vtt','tears-of-steel-full-chapters.vtt',
  'night-city-storyboard.jpg','night-city-storyboard.vtt',
  'coast-sunrise-storyboard.jpg','coast-sunrise-storyboard.vtt'];
 // Only ship the open-film option when its locally prepared MP4 exists.
