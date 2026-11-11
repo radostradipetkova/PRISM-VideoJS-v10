@@ -114,6 +114,14 @@ async def check(browser_type, name, url, reportdir):
         await page.locator('#player-b .prism-explore-launch').click()
         dialog=page.locator('#player-b .prism-chapter-dialog')
         assert await dialog.evaluate('e=>e.open'), 'Optical Index dialog failed to open'
+        # Explore uses the matching actual decoded frame where no storyboard exists.
+        iris_frame=page.locator('#player-b video.prism-iris-liveframe')
+        await iris_frame.wait_for(timeout=8000)
+        await page.wait_for_function('''() => {
+            const frame=document.querySelector('#player-b video.prism-iris-liveframe');
+            return frame?.dataset.frameReady==='true' && frame.readyState>=2;
+        }''',timeout=18000)
+        outcomes['explore_iris_real_frame']=True
         await page.keyboard.press('Escape')
         assert not await dialog.evaluate('e=>e.open'), 'Escape did not close Optical Index'
         outcomes['chapters_and_esc']=True
