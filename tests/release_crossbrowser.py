@@ -59,6 +59,28 @@ async def check(browser_type, name, url, reportdir):
         assert await page.evaluate('window.PRISM_REUSABLE_DEMO.a.getSceneLoopState().active') is None, 'Stop Loop did not work'
         outcomes['compact_loop_menu_and_ab_controls']=True
         await page.keyboard.press('Escape')
+        # Frame-accurate preview for video with no WebVTT storyboard:
+        # independent muted preview decoder must follow hover without seeking
+        # the actual playing video.
+        preview=page.locator('#player-a video.prism-loupe-liveframe')
+        assert await preview.count()==1, 'Missing video-based Optical Loupe preview'
+        original_time=await page.locator('#player-a video.prism-media').evaluate('v=>v.currentTime')
+        await page.locator('#player-a .prism-rail').evaluate('''rail=>{
+            const bounds=rail.getBoundingClientRect();
+            rail.dispatchEvent(new PointerEvent('pointermove',{
+                bubbles:true,pointerType:'mouse',clientX:bounds.left+bounds.width*.35,
+                clientY:bounds.top+bounds.height/2
+            }));
+        }''')
+        await page.wait_for_function('''() => {
+            const preview=document.querySelector('#player-a video.prism-loupe-liveframe');
+            return preview?.dataset.frameReady==='true'
+                && Number.isFinite(preview.currentTime)
+                && preview.currentTime>2.0 && preview.currentTime<3.6;
+        }''',timeout=18000)
+        player_time=await page.locator('#player-a video.prism-media').evaluate('v=>v.currentTime')
+        assert abs(player_time-original_time)<.35, 'Preview accidentally sought main media'
+        outcomes['true_liveframe_preview_without_playback_interference']=True
         # Portrait video: no cropping; authored chapter metadata and captions.
         fit=await page.locator('#player-b video.prism-media').evaluate('v=>getComputedStyle(v).objectFit')
         assert fit=='contain',f'Portrait crop risk: {fit}'
