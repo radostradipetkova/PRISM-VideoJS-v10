@@ -253,15 +253,34 @@ async def check(browser_type, name, url, reportdir):
             }""",timeout=22000)
             checks=[(39.5,'freaked out'),(41.5,'robotic claws'),
                     (47.0,'scene moves forward'),(51.0,'memory synced')]
+            outcomes['liveaction_timestamp_checks']=[]
             for when,expected in checks:
                 await page.locator('#prism-mount video.prism-media').evaluate(
                     '(v,t)=>{v.pause();v.currentTime=t}',when)
-                await page.wait_for_function("""(expected) => {
-                  const v=document.querySelector('#prism-mount video.prism-media');
-                  const t=[...(v?.textTracks||[])].find(t=>t.kind==='captions');
-                  return t?.mode==='showing' && [...(t.activeCues||[])]
-                    .some(c=>c.text.toLowerCase().includes(expected));
-                }""",arg=expected,timeout=12000)
+                try:
+                    await page.wait_for_function("""(expected) => {
+                      const v=document.querySelector('#prism-mount video.prism-media');
+                      const t=[...(v?.textTracks||[])].find(t=>t.kind==='captions');
+                      return t?.mode==='showing' && [...(t.activeCues||[])]
+                        .some(c=>c.text.toLowerCase().includes(expected));
+                    }""",arg=expected,timeout=12000)
+                except Exception:
+                    state=await page.locator('#prism-mount video.prism-media').evaluate("""v=>({
+                      time:v.currentTime,readyState:v.readyState,seeking:v.seeking,
+                      duration:v.duration,paused:v.paused,
+                      tracks:[...v.textTracks].map(t=>({
+                        kind:t.kind,mode:t.mode,cues:t.cues?.length||0,
+                        active:[...(t.activeCues||[])].map(c=>c.text)
+                      })),
+                      textTrackElements:[...v.querySelectorAll('track')].map(t=>({
+                        src:t.src,readyState:t.readyState,kind:t.kind
+                      }))
+                    })""")
+                    outcomes['liveaction_timestamp_checks'].append(
+                      {'time':when,'expected':expected,'passed':False,'state':state})
+                    raise
+                outcomes['liveaction_timestamp_checks'].append(
+                  {'time':when,'expected':expected,'passed':True})
             outcomes['liveaction_captions_beyond_39_seconds']=True
         outcomes.pop('phase',None)
     except Exception as e:
