@@ -89,12 +89,12 @@ test('Optical Loupe coalesces decoder seeks to animation frames, not 85ms mouse 
 test('Rapid hover never clears an already displayed frame while a remote seek is pending',()=>{
  for(const part of ['src','skin']){
   const code=readFileSync(new URL(`../${part}/frame-preview.js`,import.meta.url),'utf8');
-  const start=code.indexOf('if(canUseVideo){\\n    // The video is only decoded');
+  const start=code.indexOf('if(canUseVideo){\n    // The video is only decoded');
   const end=code.indexOf('  // A public Mux asset normally provides',start);
   const native=code.slice(start,end);
   assert.match(native,/scheduleSeek\(\);/);
   assert.doesNotMatch(native,/preview\.dataset\.frameReady='false'/);
-  assert.match(code,/housing\.append\(next\);\\s*preview\.remove\(\);/);
+  assert.match(code,/housing\.append\(next\);\s*preview\.remove\(\);/);
   assert.match(code,/if\(disposed \|\| pendingImage!==next \|\| pendingUrl!==url\)return/);
  }
 });
