@@ -39,6 +39,26 @@ async def check(browser_type, name, url, reportdir):
             state=await page.locator(selector).evaluate('v=>({time:v.currentTime,duration:v.duration,error:v.error?.message||null,width:v.videoWidth,height:v.videoHeight,paused:v.paused})')
             assert not state['error'] and state['time']>.15 and not state['paused'],f'{ident} playback: {state}'
             outcomes[f'{ident}_real_video_playback']=state
+        # Tab focuses a real PRISM control. Escape should clear its focus
+        # outline without clicking it, opening Settings or changing playback.
+        prefs=page.locator('#player-a .prism-preferences-trigger')
+        await prefs.focus()
+        await page.keyboard.press('Shift+Tab')
+        await page.keyboard.press('Tab')
+        assert await prefs.evaluate('(e)=>document.activeElement===e'), 'Tab did not focus preferences'
+        await page.keyboard.press('Escape')
+        assert not await prefs.evaluate('(e)=>document.activeElement===e'), 'Escape left focus trapped on the control'
+        assert await prefs.get_attribute('aria-expanded')=='false', 'Escape unexpectedly opened preferences'
+        outcomes['escape_clears_tab_control_focus']=True
+        # Escape must still close an open preferences panel, returning focus
+        # to its trigger (rather than clearing the modal's focus prematurely).
+        await prefs.click()
+        panel=page.locator('#player-a .prism-preferences-panel')
+        await panel.wait_for(state='visible',timeout=10000)
+        await page.keyboard.press('Escape')
+        await panel.wait_for(state='hidden',timeout=10000)
+        assert await prefs.evaluate('(e)=>document.activeElement===e'), 'Settings Escape did not restore trigger focus'
+        outcomes['escape_preserves_preferences_close']=True
         # Scene Loop lives in a compact native Video.js popover, not Player Settings.
         loop_trigger=page.locator('#player-a .prism-loop-trigger')
         await loop_trigger.evaluate('(button)=>button.click()')

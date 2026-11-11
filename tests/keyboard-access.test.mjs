@@ -27,3 +27,21 @@ test('showcase Space works outside the player while native v10 hotkeys remain sc
   assert.match(player,new RegExp(`<media-hotkey keys="${key}"`));
  assert.doesNotMatch(player,/<media-hotkey[^>]*target="document"/);
 });
+
+
+// The reusable PRISM skin must clear an ordinary Tab focus on Escape without
+// stealing Escape from open menus, dialogs, preferences or fullscreen.
+test('Escape clears Tab focus only when player overlays are closed',async()=>{
+ for(const where of ['src','skin']){
+  const source=await read(where+'/prism-player.js');
+  assert.match(source,/skin\.addEventListener\('keydown',clearTabFocusOnEscape,true\)/);
+  assert.match(source,/skin\.removeEventListener\('keydown',clearTabFocusOnEscape,true\)/);
+  assert.match(source,/event\.key!=='Escape'/);
+  assert.match(source,/doc\.fullscreenElement/);
+  assert.match(source,/media-menu\[data-open\]/);
+  assert.match(source,/dialog\[open\]/);
+  assert.match(source,/\.prism-preferences-panel:not\(\[hidden\]\)/);
+  assert.match(source,/focused\.blur\(\)/);
+  assert.match(source,/skin\.classList\.remove\('prism-keyboard-engaged'\)/);
+ }
+});

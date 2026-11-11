@@ -196,7 +196,7 @@ export function mountPrismPlayer(target, options={}) {
               <div class="prism-shortcut-row" role="listitem"><span class="prism-shortcut-keys"><kbd>SHIFT</kbd><span>+</span><kbd>←</kbd><kbd>→</kbd></span><span>Previous / next chapter**</span></div>
               <div class="prism-shortcut-row" role="listitem"><span class="prism-shortcut-keys"><kbd>TAB</kbd></span><span>Move between controls</span></div>
               <div class="prism-shortcut-row" role="listitem"><span class="prism-shortcut-keys"><kbd>ENTER</kbd><span>/</span><kbd>SPACE</kbd></span><span>Activate focused control</span></div>
-              <div class="prism-shortcut-row" role="listitem"><span class="prism-shortcut-keys"><kbd>ESC</kbd></span><span>Close settings / dialogs</span></div>
+              <div class="prism-shortcut-row" role="listitem"><span class="prism-shortcut-keys"><kbd>ESC</kbd></span><span>Close menus / clear Tab focus</span></div>
             </div>
             <p class="prism-keyboard-guide-note">* With the player surface focused; focused sliders use their own arrow-key steps. ** Only on the focused timeline when the video provides chapters.</p>
 
@@ -356,6 +356,23 @@ export function mountPrismPlayer(target, options={}) {
     actualCaptionNode?.addEventListener('load',initializeDefaultCaptions);
   const player = target.querySelector('video-player');
   const skin = target.querySelector('.prism-skin');
+  // Escape dismisses a Tab-focused control's outline when no overlay is
+  // active. Keep native Video.js menus, PRISM dialogs and fullscreen first.
+  // Capture lets this work on Web Components that stop bubbling key events.
+  const clearTabFocusOnEscape=(event)=>{
+    if(event.key!=='Escape' || event.defaultPrevented || event.repeat ||
+       event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)return;
+    const doc=skin.ownerDocument;
+    const focused=doc.activeElement;
+    if(!focused || (focused!==skin && !skin.contains(focused)))return;
+    if(doc.fullscreenElement || doc.webkitFullscreenElement ||
+       skin.querySelector('dialog[open], media-menu[data-open], media-menu:popover-open, media-dialog-popup:popover-open, .prism-preferences-panel:not([hidden]), [role="dialog"][aria-modal="true"]'))return;
+    event.preventDefault();
+    event.stopPropagation();
+    focused.blur();
+    skin.classList.remove('prism-keyboard-engaged');
+  };
+  skin.addEventListener('keydown',clearTabFocusOnEscape,true);
   const mediaForCaptionDefault=mediaElement;
   mediaForCaptionDefault?.addEventListener('loadedmetadata',initializeDefaultCaptions);
   mediaForCaptionDefault?.addEventListener('canplay',initializeDefaultCaptions);
@@ -460,6 +477,7 @@ export function mountPrismPlayer(target, options={}) {
     isRememberingSettings(){return rememberEnabled;},
     destroy(){
     sceneLoop.destroy();
+    skin.removeEventListener('keydown',clearTabFocusOnEscape,true);
     mediaElement.removeEventListener('ratechange',onRateChange);
     mediaElement.removeEventListener('loadedmetadata',restorePlaybackRate);
     mediaElement.removeEventListener('canplay',restorePlaybackRate);
