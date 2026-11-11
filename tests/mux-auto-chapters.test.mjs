@@ -3,14 +3,13 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {prismChaptersDirective,prismUploadConfig} from '../scripts/mux-auto-chapters.mjs';
 
-test('Mux AI chapters directive generates subtitles before chaptering and writes chapter track',()=>{
+test('Mux AI directive analyzes visual structure and writes a real chapter track',()=>{
  const directive=prismChaptersDirective();
  assert.equal(directive.subject.type,'video.asset');
- assert.equal(directive.resources[0].source.action,'generate_subtitles');
- assert.equal(directive.resources[0].source.parameters.language_code,'auto');
- assert.deepEqual(directive.bindings[0].inputs,['captions']);
- assert.equal(directive.bindings[0].workflow,'generate-chapters');
+ assert.deepEqual(directive.resources,[]);
+ assert.equal(directive.bindings[0].workflow,'analyze-structure');
  assert.equal(directive.bindings[0].parameters.update_asset_chapters,true);
+ assert.equal(directive.bindings[0].parameters.output_steering.granularity,'balanced');
 });
 test('Mux Direct Upload attaches the chosen directive but has no public AI trigger',()=>{
  const upload=prismUploadConfig('drv_ABC123','https://prism.example');

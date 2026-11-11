@@ -4,7 +4,7 @@ PRISM reads Mux's **real chapters text tracks** through the read-only Cloudflare
 
 ## One-time setup (required; cannot be done solely by committing code)
 
-Mux [Robots Directives](https://www.mux.com/docs/guides/robots-directives) can generate missing captions, run AI chapter generation, and write the chapters back to the asset. PRISM includes a tested, reviewable directive specification in `scripts/mux-auto-chapters.mjs`.
+Mux [Robots Directives](https://www.mux.com/docs/guides/robots-directives) can run the **Analyze Structure** AI workflow and write timestamped chapters back to the asset. It uses video shot evidence (and available captions) so speechless footage is supported, unlike transcript-only chaptering. PRISM includes a tested, reviewable directive specification in `scripts/mux-auto-chapters.mjs`.
 
 **Important:** Mux runs these AI workflows only on assets to which you attach the directive. Simply pasting a public playback ID — especially from someone else's account — does NOT authorize PRISM to generate chapters. The AI service has its own pricing and availability limits.
 
@@ -46,7 +46,7 @@ After deployment, open the PRISM showcase with a public Mux playback ID, e.g. `/
 
 ## How it works
 
-The directive has one subtitle resource with `mux_api.generate_subtitles` and automatic language detection, followed by the `generate-chapters` workflow. `update_asset_chapters: true` stores the generated results in Mux as a chapters text track. **Warning:** this setting replaces existing chapters on that asset. Only attach the directive to videos for which this overwrite is acceptable.
+The directive invokes Mux Robots `analyze-structure` with visual shot analysis and a balanced level of scene/chapter detail. If subtitles already exist, they provide additional spoken context; captions are not required for video assets. `update_asset_chapters: true` stores the generated results in Mux as a chapters text track. **Warning:** this setting replaces existing chapters on that asset. Only attach the directive to videos for which this overwrite is acceptable.
 
 You can also create the same directive in the [Mux Dashboard](https://dashboard.mux.com/) rather than using a CLI.
 
@@ -54,9 +54,9 @@ The PRISM Worker validates ownership and public playback policy before returning
 
 ## Limits and fallback behavior
 
-- Auto chaptering requires a ready on-demand asset with usable audio/captions. Silent footage, unsupported languages, processing failures, signed playback IDs, videos outside your connected Mux account, or uploads without the directive may not receive AI chapters.
+- Auto chaptering requires a ready on-demand video asset. Silent footage CAN be analyzed visually, but clips shorter than about 60 seconds, poor visual evidence, processing failures, signed playback IDs, videos outside your connected Mux account, or uploads without the directive may not receive meaningful AI chapters. Mux's structure analysis may also create and bill for shot detection.
 - Explore remains available regardless; when duration is known it shows **TIME INDEX** rather than pretending those markers are AI-detected scenes.
 - The locally hosted *Tears of Steel* film already has an authored WebVTT chapter track. Its real chapter names remain available without Mux AI.
 - New Mux tracks can appear asynchronously. The player polls a limited number of times and cancels polling when the video is changed. Reload the page if the AI job completes after the polling period.
 
-References: [Mux Robots Directives](https://www.mux.com/docs/guides/robots-directives), [Generate Chapters API](https://www.mux.com/docs/api-reference/robots/generate-chapters/create-generate-chapters-job), [Create Direct Upload API](https://www.mux.com/docs/api-reference/video/direct-uploads/create-direct-upload).
+References: [Mux Robots Directives](https://www.mux.com/docs/guides/robots-directives), [Analyze Structure](https://www.mux.com/docs/guides/robots-analyze-structure), [Create Direct Upload API](https://www.mux.com/docs/api-reference/video/direct-uploads/create-direct-upload).

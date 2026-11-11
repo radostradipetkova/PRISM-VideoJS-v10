@@ -10,21 +10,17 @@ import path from 'node:path';
 
 export function prismChaptersDirective(){
   return {
-    name:'PRISM / Auto speech chapters',
+    name:'PRISM / Visual AI chapters',
     subject:{type:'video.asset'},
-    resources:[{
-      reference_id:'captions',
-      type:'video.asset.track',
-      kind:'subtitles',
-      source:{via:'mux_api',action:'generate_subtitles',parameters:{language_code:'auto'}}
-    }],
+    // Analyze Structure uses visual shot evidence and available subtitles,
+    // even for silent videos. Mux prepares shot data for the workflow.
+    resources:[],
     bindings:[{
-      reference_id:'generate_chapters',
-      workflow:'generate-chapters',
-      inputs:['captions'],
+      reference_id:'analyze_structure',
+      workflow:'analyze-structure',
       parameters:{
         update_asset_chapters:true,
-        output_steering:{chapter_style:'descriptive',chapter_granularity:'balanced'}
+        output_steering:{granularity:'balanced'}
       }
     }]
   };

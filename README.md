@@ -184,4 +184,4 @@ The **LIVE ACTION** option now has a working optical frame preview and a cinemat
 
 ## Mux AI chapters (opt-in)
 
-The Explore Optical Index now stays usable while remote metadata loads. To automatically produce **real AI chapter titles** for newly ingested Mux videos, configure a Mux Robots Directive for speech captions → chapter generation. Full setup and security notes: [Mux AI Chapters](docs/MUX-AI-CHAPTERS.md). This integration requires your Mux API credentials and explicit directive attachment per upload; it is not activated merely by deploying this source.
+The Explore Optical Index now stays usable while remote metadata loads. To automatically produce **real AI chapter titles** for newly ingested Mux videos, configure a Mux Robots Directive for visual structure analysis → real chapter tracks. Full setup and security notes: [Mux AI Chapters](docs/MUX-AI-CHAPTERS.md). This integration requires your Mux API credentials and explicit directive attachment per upload; it is not activated merely by deploying this source.
