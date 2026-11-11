@@ -49,3 +49,16 @@ test('caption appearance keeps a compact and accessible layout at phone widths',
   assert.match(css,/\.prism-captions-menu \[hidden\]\{display:none!important\}/);
  }
 });
+
+test('caption settings uses a toothed cog in the top-left and leaves the title centered',async()=>{
+ for(const dir of ['src','skin']){
+  const source=await read(`${dir}/prism-player.js`);
+  const css=await read(dir==='src'?'src/styles.css':'skin/prism-skin.css');
+  assert.match(source,/gear: svg\('<path d="M10\\.5 2h3l\\.6 2\\.5/);
+  assert.doesNotMatch(source,/gear: svg\('<circle cx="12" cy="12" r="3"\/><path d="M12 2\\.5v2/);
+  assert.match(source,/<div class="prism-caption-menu-heading"><button class="prism-caption-gear"[^>]*>\\$\\{icon\\.gear\\}<\\/button><span class="prism-menu-title">SUBTITLES<\\/span>/);
+  assert.match(css,/\\.prism-caption-menu-heading\\{display:grid;grid-template-columns:44px minmax\\(0,1fr\\) 44px/);
+  assert.match(css,/\\.prism-caption-menu-heading \\.prism-menu-title\\{grid-column:2;grid-row:1;[^}]*text-align:center/);
+  assert.match(css,/\\.prism-caption-gear\\{[^}]*grid-column:1;grid-row:1/);
+ }
+});
