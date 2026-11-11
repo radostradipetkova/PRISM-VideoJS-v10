@@ -24,7 +24,7 @@ const icon = {
   right: svg('<path d="m14 7 5 5-5 5M19 12H7"/>'),
   speed: svg('<circle cx="12" cy="12" r="9"/><path d="m12 12 4-4"/><path d="M5 16h2m10 0h2"/>'),
   captions: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M6.5 12.5h4m2 0h4M6.5 15.5h5m2 0h4"/>'),
-  gear: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.4 1.4m10.6 10.6 1.4 1.4m0-13.4-1.4 1.4M6.7 17.3l-1.4 1.4"/>',20),
+  gear: svg('<path d="M10.5 2h3l.6 2.5 1.35.55 2.15-1.35 2.1 2.1-1.35 2.15.55 1.35L21.5 10.5v3l-2.6.6-.55 1.35 1.35 2.15-2.1 2.1-2.15-1.35-1.35.55L13.5 21.5h-3l-.6-2.6-1.35-.55-2.15 1.35-2.1-2.1 1.35-2.15-.55-1.35L2.5 13.5v-3l2.6-.6.55-1.35L4.3 6.4l2.1-2.1 2.15 1.35 1.35-.55L10.5 2Z"/><circle cx="12" cy="12" r="3.1"/>',20),
   preferences: svg('<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="11" cy="17" r="2" fill="currentColor" stroke="none"/>'),
   loop: svg('<path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>')
 };
@@ -128,7 +128,7 @@ export function mountPrismPlayer(target, options={}) {
                 </media-menu>
                 ${hasCaptions ? `<button class="prism-control prism-settings-trigger prism-captions-trigger" type="button" commandfor="${ccMenu}" aria-label="Caption tracks and settings">${icon.captions}</button>
                 <media-menu id="${ccMenu}" class="prism-menu prism-captions-menu" side="top" align="end"><media-menu-content>
-                  <div class="prism-caption-menu-heading"><span class="prism-menu-title">SUBTITLES</span><button class="prism-caption-gear" type="button" aria-label="Caption appearance settings" aria-controls="${uid}-caption-appearance" aria-expanded="false" title="Caption appearance">${icon.gear}</button></div>
+                  <div class="prism-caption-menu-heading"><button class="prism-caption-gear" type="button" aria-label="Caption appearance settings" aria-controls="${uid}-caption-appearance" aria-expanded="false" title="Caption appearance">${icon.gear}</button><span class="prism-menu-title">SUBTITLES</span></div>
                   <div class="prism-caption-track-list" data-caption-track-list>
                     <media-captions-radio-group label="Captions"><template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template></media-captions-radio-group>
                     <p class="prism-caption-track-status" data-caption-track-status role="status" aria-live="polite"></p>
