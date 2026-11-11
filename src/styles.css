@@ -1400,3 +1400,11 @@
 .prism-skin .prism-caption-track-status:empty{display:none}
 @container (max-width:360px){.prism-skin .prism-captions-menu{width:min(270px,calc(100cqw - 10px));min-width:0;padding:7px}}
 @media (forced-colors:active){.prism-skin .prism-caption-gear,.prism-skin .prism-caption-back,.prism-skin .prism-caption-appearance .prism-preferences-choices button{forced-color-adjust:auto;background:ButtonFace;color:ButtonText;border-color:ButtonText}}
+
+/* A real seeked video frame or Mux thumbnail fills the loupe instead of gray.
+   Reticle stays optically above the preview; inactive fallbacks do not obscure
+   Video.js's authored storyboard. */
+.prism-skin .prism-loupe-housing .prism-loupe-liveframe{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;pointer-events:none;z-index:1;display:none;background:#1b2528}
+.prism-skin .prism-loupe-housing .prism-loupe-liveframe[data-frame-ready="true"]{display:block}
+.prism-skin .prism-loupe-housing .prism-loupe-reticle{z-index:2}
+.prism-skin .prism-loupe-housing .prism-loupe-image{position:relative;z-index:0}
