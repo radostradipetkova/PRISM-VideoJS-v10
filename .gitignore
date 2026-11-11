@@ -1,0 +1,26 @@
+# Dependencies, local environment, and Cloudflare state
+node_modules/
+.wrangler/
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+
+# Generated deployment packages
+dist/
+skin-dist/
+
+# Local QA output and temporary fixtures
+screenshots/
+fixtures/
+__pycache__/
+.pytest_cache/
+*.log
+*.zip
+*.bak
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
