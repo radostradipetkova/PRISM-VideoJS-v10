@@ -72,7 +72,7 @@ export function transcriptMarkers(cues,duration){
     const candidates=source.filter(c=>c.time>=Math.max(previous+Math.min(8,width*.35),target-width*.42) && c.time<=target+width*.42);
     if(!candidates.length)continue;
     const chosen=candidates.reduce((a,b)=>Math.abs(a.time-target)<=Math.abs(b.time-target)?a:b);
-    const title=chosen.title.replace(/<[^>]*>/g,'').replace(/\\s+/g,' ').trim().slice(0,52);
+    const title=chosen.title.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,52);
     if(!title)continue;
     result.push({time:chosen.time,title});
     previous=chosen.time;
