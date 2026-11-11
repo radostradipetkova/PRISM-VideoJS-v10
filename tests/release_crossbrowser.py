@@ -8,7 +8,7 @@ Run on a machine/CI with Playwright browsers installed:
 This file is not counted as passed until it has actually executed successfully.
 """
 from __future__ import annotations
-import argparse, asyncio, json, os, subprocess, time, urllib.request, traceback, tempfile
+import argparse, asyncio, json, os, re, subprocess, time, urllib.request, traceback, tempfile
 from pathlib import Path
 from playwright.async_api import async_playwright
 
@@ -238,12 +238,33 @@ async def check(browser_type, name, url, reportdir):
             subprocess.run([
                 'ffmpeg','-y','-hide_banner','-loglevel','error',
                 '-f','lavfi','-i','color=c=black:s=320x180:r=2:d=62',
-                '-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p',
-                '-movflags','+faststart',str(fake)
+                '-c:v','libx264','-preset','ultrafast','-g','2',
+                '-pix_fmt','yuv420p','-movflags','+faststart',str(fake)
             ],check=True,timeout=40)
+            # Safari/WebKit requires genuine HTTP byte ranges to complete
+            # seeks on a remote MP4. A generic 200 response can leave
+            # video.seeking=true forever even though captions loaded.
+            mp4=fake.read_bytes()
+            total=len(mp4)
             async def blender_fixture(route):
-                await route.fulfill(status=200,content_type='video/mp4',path=str(fake),
-                  headers={'Access-Control-Allow-Origin':'*','Accept-Ranges':'bytes'})
+                header=route.request.headers.get('range','')
+                match=re.fullmatch(r'bytes=(\\d+)-(\\d*)',header)
+                headers={'Access-Control-Allow-Origin':'*','Accept-Ranges':'bytes',
+                         'Content-Type':'video/mp4'}
+                if match:
+                    start=int(match.group(1))
+                    end=int(match.group(2)) if match.group(2) else total-1
+                    end=min(end,total-1)
+                    if start>=total or end<start:
+                        await route.fulfill(status=416,headers={
+                          **headers,'Content-Range':f'bytes */{total}'})
+                        return
+                    body=mp4[start:end+1]
+                    headers.update({'Content-Range':f'bytes {start}-{end}/{total}',
+                                    'Content-Length':str(len(body))})
+                    await route.fulfill(status=206,body=body,headers=headers)
+                else:
+                    await route.fulfill(status=200,body=mp4,headers=headers)
             await page.route('https://video.blender.org/**',blender_fixture)
             await page.locator('[data-film="liveaction"]').click()
             await page.wait_for_function("""() => {
