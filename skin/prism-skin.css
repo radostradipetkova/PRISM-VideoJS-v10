@@ -1106,3 +1106,17 @@
 .prism-skin .prism-loupe-housing .prism-loupe-liveframe[data-frame-ready="true"]{display:block}
 .prism-skin .prism-loupe-housing .prism-loupe-reticle{z-index:2}
 .prism-skin .prism-loupe-housing .prism-loupe-image{position:relative;z-index:0}
+
+/* Explore's film aperture follows the same real media frames as the loupe.
+   The Video.js metadata thumbnail remains first choice when present. */
+.prism-skin .prism-iris .prism-iris-liveframe{
+  position:absolute;inset:15.5%;width:69%;height:69%;border-radius:50%;
+  object-fit:cover;pointer-events:none;display:none;z-index:1;
+  background:#192528;
+}
+.prism-skin .prism-iris .prism-iris-liveframe[data-frame-ready="true"]{display:block}
+.prism-skin .prism-iris .prism-iris-center{z-index:2}
+.prism-skin .prism-iris .prism-iris-label{z-index:3}
+@media(max-width:620px){
+  .prism-skin .prism-iris .prism-iris-liveframe{inset:17%;width:66%;height:66%}
+}
