@@ -329,6 +329,36 @@ async def check(browser_type, name, url, reportdir):
               return v?.src.includes('video.blender.org/') && v.readyState>=1
                      && v.duration>=60;
             }""",timeout=22000)
+            # The full open film now has an actual 2-second storyboard.
+            # Verify *visible*, distinct real tiles on rapid pointer moves,
+            # rather than a gray/off-screen decoder fallback.
+            outcomes['phase']='full-film Optical Loupe storyboard / rapid hover'
+            sprite=page.locator('#prism-mount canvas.prism-loupe-sprite-preview')
+            await sprite.wait_for(state='attached',timeout=10000)
+            async def move_loupe(fraction):
+                return await page.locator('#prism-mount .prism-rail').evaluate('''(rail,fraction)=>{
+                  const rect=rail.getBoundingClientRect();
+                  rail.dispatchEvent(new PointerEvent('pointermove',{
+                    bubbles:true,pointerType:'mouse',
+                    clientX:rect.left+rect.width*fraction,
+                    clientY:rect.top+rect.height/2
+                  }));
+                }''',fraction)
+            await move_loupe(.13)
+            await page.wait_for_function("""() => {
+              const canvas=document.querySelector('#prism-mount canvas.prism-loupe-sprite-preview');
+              return canvas?.dataset.frameReady==='true' &&
+                getComputedStyle(canvas).display!=='none';
+            }""",timeout=15000)
+            first=await sprite.evaluate('(canvas)=>canvas.toDataURL()')
+            await move_loupe(.70)
+            await page.wait_for_function("""(before) => {
+              const canvas=document.querySelector('#prism-mount canvas.prism-loupe-sprite-preview');
+              return canvas?.dataset.frameReady==='true' &&
+                getComputedStyle(canvas).display!=='none' &&
+                canvas.toDataURL()!==before;
+            }""",arg=first,timeout=10000)
+            outcomes['liveaction_rapid_hover_uses_distinct_real_sprite_frames']=True
             checks=[(39.5,'freaked out'),(41.5,'robotic claws'),
                     (47.0,'scene moves forward'),(51.0,'memory synced')]
             outcomes['liveaction_timestamp_checks']=[]
