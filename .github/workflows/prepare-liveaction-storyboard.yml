@@ -65,7 +65,21 @@ jobs:
           git add assets/tears-of-steel-full-storyboard.jpg assets/tears-of-steel-full-storyboard.vtt
           if ! git diff --cached --quiet; then
             git commit -m "Add full-film Tears of Steel timed storyboard frames"
-            git push origin HEAD:main
+            # Other PRISM improvements may land while FFmpeg is extracting.
+            # Rebase only these generated assets on the newest main before
+            # publishing, without force pushing or dropping anyone's work.
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo "Full-film storyboard published on main"
+                exit 0
+              fi
+              echo "Remote main moved again; retrying push $attempt/5"
+              sleep 3
+            done
+            echo "::error::Unable to publish storyboard after 5 safe retries"
+            exit 1
           else
             echo "Storyboard already current"
           fi
