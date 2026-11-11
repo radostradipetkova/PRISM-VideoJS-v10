@@ -49,6 +49,7 @@ async def check(browser_type, name, url, reportdir):
         await page.keyboard.press('Escape')
         assert not await prefs.evaluate('(e)=>document.activeElement===e'), 'Escape left focus trapped on the control'
         assert await prefs.get_attribute('aria-expanded')=='false', 'Escape unexpectedly opened preferences'
+        assert await page.locator('#player-a .prism-preferences-panel').is_hidden(), 'Escape opened the settings overlay'
         outcomes['escape_clears_tab_control_focus']=True
         # Escape must still close an open preferences panel, returning focus
         # to its trigger (rather than clearing the modal's focus prematurely).
