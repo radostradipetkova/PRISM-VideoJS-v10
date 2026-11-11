@@ -8,7 +8,7 @@ Run on a machine/CI with Playwright browsers installed:
 This file is not counted as passed until it has actually executed successfully.
 """
 from __future__ import annotations
-import argparse, asyncio, json, os, subprocess, time, urllib.request, traceback
+import argparse, asyncio, json, os, subprocess, time, urllib.request, traceback, tempfile
 from pathlib import Path
 from playwright.async_api import async_playwright
 
@@ -212,6 +212,57 @@ async def check(browser_type, name, url, reportdir):
         media_after=await page.locator('#prism-mount video.prism-media').evaluate('v=>v.currentTime')
         assert abs(media_after-media_before)<.35, 'Preview scrub incorrectly sought main playback'
         outcomes['sprite_preview_shows_real_distinct_frames_without_seeking']=True
+
+        # Regression: the CINEMATIC reel must show real descriptive subtitles
+        # by default, including "Waves" at the second scene (not merely a
+        # populated captions menu).
+        outcomes['phase']='cinematic descriptive subtitles / default on'
+        reel=page.locator('#prism-mount video.prism-media')
+        await reel.evaluate('(v)=>{v.pause();v.currentTime=10.5}')
+        await page.wait_for_function("""() => {
+          const v=document.querySelector('#prism-mount video.prism-media');
+          const t=[...(v?.textTracks||[])].find(t=>t.kind==='captions');
+          return t?.mode==='showing' && [...(t.activeCues||[])].some(c=>/waves/i.test(c.text));
+        }""",timeout=16000)
+        outcomes['cinematic_waves_caption_active']=True
+
+        # Regression: Live Action subtitles should not disappear after 39s.
+        # The original 10-minute Blender MP4 is an external dependency; route
+        # *only the video bytes* to a generated 62s H.264 clip. PRISM still
+        # loads its actual bundled WebVTT through the real player and seeks
+        # the real video media timeline. This isolates caption correctness
+        # from Blender's network latency and avoids a huge external download.
+        outcomes['phase']='live action captions / 39s, 42s, 47s, 51s'
+        with tempfile.TemporaryDirectory(prefix='prism-caption-qa-') as tmp:
+            fake=Path(tmp)/'caption-timeline.mp4'
+            subprocess.run([
+                'ffmpeg','-y','-hide_banner','-loglevel','error',
+                '-f','lavfi','-i','color=c=black:s=320x180:r=2:d=62',
+                '-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p',
+                '-movflags','+faststart',str(fake)
+            ],check=True,timeout=40)
+            async def blender_fixture(route):
+                await route.fulfill(status=200,content_type='video/mp4',path=str(fake),
+                  headers={'Access-Control-Allow-Origin':'*','Accept-Ranges':'bytes'})
+            await page.route('https://video.blender.org/**',blender_fixture)
+            await page.locator('[data-film="liveaction"]').click()
+            await page.wait_for_function("""() => {
+              const v=document.querySelector('#prism-mount video.prism-media');
+              return v?.src.includes('video.blender.org/') && v.readyState>=1
+                     && v.duration>=60;
+            }""",timeout=22000)
+            checks=[(39.5,'freaked out'),(41.5,'robotic claws'),
+                    (47.0,'scene moves forward'),(51.0,'memory synced')]
+            for when,expected in checks:
+                await page.locator('#prism-mount video.prism-media').evaluate(
+                    '(v,t)=>{v.pause();v.currentTime=t}',when)
+                await page.wait_for_function("""(expected) => {
+                  const v=document.querySelector('#prism-mount video.prism-media');
+                  const t=[...(v?.textTracks||[])].find(t=>t.kind==='captions');
+                  return t?.mode==='showing' && [...(t.activeCues||[])]
+                    .some(c=>c.text.toLowerCase().includes(expected));
+                }""",arg=expected,timeout=12000)
+            outcomes['liveaction_captions_beyond_39_seconds']=True
         outcomes.pop('phase',None)
     except Exception as e:
         outcomes['FAILURE']=f'{type(e).__name__}: {e!r}'
