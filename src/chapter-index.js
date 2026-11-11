@@ -53,14 +53,46 @@ export function timeMarkers(duration) {
   });
 }
 
-/** Modes: auto = authored only; time = authored or time markers; none = hidden. */
-export function resolveIndex({configured=[],tracked=[],duration=NaN,mode='auto'}={}) {
+/** Lightweight transcript-derived navigation for videos without authored chapter
+ * metadata. This is NOT AI or visual shot detection: boundaries are drawn from
+ * actual cue timing, and titles are short excerpts of existing subtitles.
+ */
+export function transcriptMarkers(cues,duration){
+  const length=Number(duration);
+  if(!Number.isFinite(length)||length<=0)return [];
+  const source=normalizeChapters(cues,length).filter(c=>c.time>0);
+  if(source.length<2)return [];
+  const count=length<120?4:length<1200?Math.min(10,Math.max(5,Math.round(length/95))):12;
+  const width=length/count;
+  const result=[{time:0,title:'OPENING'}];
+  let previous=0;
+  for(let i=1;i<count;i++){
+    const target=i*width;
+    // Prefer a real spoken line near the target, rather than fabricating a cut.
+    const candidates=source.filter(c=>c.time>=Math.max(previous+Math.min(8,width*.35),target-width*.42) && c.time<=target+width*.42);
+    if(!candidates.length)continue;
+    const chosen=candidates.reduce((a,b)=>Math.abs(a.time-target)<=Math.abs(b.time-target)?a:b);
+    const title=chosen.title.replace(/<[^>]*>/g,'').replace(/\\s+/g,' ').trim().slice(0,52);
+    if(!title)continue;
+    result.push({time:chosen.time,title});
+    previous=chosen.time;
+  }
+  return normalizeChapters(result,length);
+}
+
+/** Modes: auto = authored only; smart = authored, transcript or time markers;
+ * time = authored or time markers; none = hidden. Smart is NOT an AI claim.
+ */
+
+export function resolveIndex({configured=[],tracked=[],derived=[],duration=NaN,mode='auto'}={}) {
   if(mode==='none') return {entries:[],type:'none'};
   const explicit=normalizeChapters(configured,duration);
   if(explicit.length) return {entries:explicit,type:'chapters'};
   const fromTrack=normalizeChapters(tracked,duration);
   if(fromTrack.length) return {entries:fromTrack,type:'chapters'};
-  if(mode==='time') return {entries:timeMarkers(duration),type:'time'};
+  const fromTranscript=normalizeChapters(derived,duration);
+  if(mode==='smart' && fromTranscript.length>1)return {entries:fromTranscript,type:'transcript'};
+  if(mode==='time' || mode==='smart') return {entries:timeMarkers(duration),type:'time'};
   return {entries:[],type:'none'};
 }
 
