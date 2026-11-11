@@ -48,7 +48,7 @@ export function isValidAB(a,b,media){
   return Number.isFinite(a) && Number.isFinite(b) && isLoopRangeSeekable(media,a,b);
 }
 
-/** Hook up reusable Scene Loop to a single media element and the existing settings menu. */
+/** Hook up reusable Scene Loop to a single media element and the compact Video.js transport popover. */
 export function initSceneLoop({skin,media,getChapters=()=>[]}={}){
   const group=skin?.querySelector('[data-loop-panel]');
   const chapterButton=group?.querySelector('[data-loop-chapter]');
@@ -115,8 +115,7 @@ export function initSceneLoop({skin,media,getChapters=()=>[]}={}){
     skin.classList.toggle('prism-loop-active',!!active);
     if(dockButton){
       dockButton.classList.toggle('is-looping',!!active);
-      const hasChapter=!!(scene && isLoopRangeSeekable(media,scene.from,scene.to));
-      dockButton.setAttribute('aria-label',active?'Stop scene loop':hasChapter?'Loop current chapter':'Open Scene Loop to mark IN and OUT');
+      dockButton.setAttribute('aria-label',active?'Scene loop controls — loop active':'Scene loop controls');
       dockButton.setAttribute('aria-pressed',String(!!active));
     }
   }
@@ -218,6 +217,11 @@ export function initSceneLoop({skin,media,getChapters=()=>[]}={}){
     else render();
   }
   function onReset(){clearTimeout(seekTimer);seekTimer=null;a=null;b=null;active=null;internalSeek=false;restartAfterSeek=false;message='';render();}
+  // The native Video.js menu handles opening, closing and Escape.
+  // A/B actions stay within the popover instead of bubbling into player gestures.
+  on(group,'click',event=>event.stopPropagation());
+  on(group,'pointerdown',event=>event.stopPropagation());
+  on(group,'keydown',event=>{if(!['Escape','Tab'].includes(event.key))event.stopPropagation();});
   on(chapterButton,'click',chooseChapter);
   on(inButton,'click',()=>setMarker('a'));
   on(outButton,'click',()=>setMarker('b'));
