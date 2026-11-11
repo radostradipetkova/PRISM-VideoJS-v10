@@ -8,7 +8,7 @@ const project=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const dest=path.join(project,'skin-dist');
 await rm(dest,{recursive:true,force:true});
 await mkdir(dest,{recursive:true});
-for (const name of ['index.js','register-videojs.js','prism-player.js','optical-touch.js','player-preferences.js','remember-settings.js','scene-loop.js','chapter-index.js','fullscreen-orientation.js','media-status.js','prism-skin.css','LICENSE','README.md']) {
+for (const name of ['index.js','register-videojs.js','prism-player.js','optical-touch.js','frame-preview.js','player-preferences.js','remember-settings.js','scene-loop.js','chapter-index.js','fullscreen-orientation.js','media-status.js','prism-skin.css','LICENSE','README.md']) {
  await cp(path.join(project,'skin',name),path.join(dest,name));
 }
 await writeFile(path.join(dest,'package.json'),JSON.stringify({
