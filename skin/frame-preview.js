@@ -1,12 +1,127 @@
+/** Decode WebVTT sprite regions without tying preview rendering to MP4 ranges. */
+export function parseStoryboardCues(raw,baseUrl){
+  if(typeof raw!=='string'||!/^\\uFEFF?WEBVTT(?:\\s|$)/.test(raw))return [];
+  const clock=value=>{
+    const numbers=value.trim().split(':');
+    if(numbers.length!==2&&numbers.length!==3)return NaN;
+    const seconds=Number(numbers.pop()),minutes=Number(numbers.pop()),hours=numbers.length?Number(numbers.pop()):0;
+    if(!Number.isFinite(seconds)||!Number.isFinite(minutes)||!Number.isFinite(hours)||seconds>=60||minutes>=60)return NaN;
+    return hours*3600+minutes*60+seconds;
+  };
+  const cues=[];
+  for(const block of raw.replace(/\\r/g,'').split(/\\n\\s*\\n/).slice(1)){
+    const lines=block.split('\\n').map(s=>s.trim()).filter(Boolean);
+    const separator=lines.findIndex(s=>s.includes('-->'));
+    if(separator<0||separator+1>=lines.length)continue;
+    const [a,b]=lines[separator].split('-->').map(s=>s.trim().split(/\\s+/)[0]);
+    const from=clock(a),to=clock(b);
+    const frame=lines[separator+1].match(/^(.+?)#xywh=(\\d+),(\\d+),(\\d+),(\\d+)$/i);
+    if(!(Number.isFinite(from)&&Number.isFinite(to)&&to>from&&frame))continue;
+    const [x,y,w,h]=frame.slice(2).map(Number);
+    if(w<1||h<1||w>4096||h>4096)continue;
+    let src;
+    try{src=new URL(frame[1],baseUrl).href;}catch(_){continue;}
+    cues.push({from,to,src,x,y,w,h});
+  }
+  return cues.sort((a,b)=>a.from-b.from);
+}
+/** One browser-cached sprite powers both Optical Loupe and Explore.
+ * A canvas draws only the selected tile; it never seeks playback or loads
+ * a second copy of a 12-minute remote movie.
+ */
+function initStoryboardSpritePreview({skin,storyboard}){
+  const housing=skin.querySelector('.prism-loupe-housing');
+  const iris=skin.querySelector('.prism-iris');
+  if(!housing)return {show(){},showChapter(){},destroy(){}};
+  const loupe=document.createElement('canvas');
+  loupe.className='prism-loupe-sprite-preview';
+  loupe.width=160;loupe.height=90;
+  loupe.setAttribute('aria-hidden','true');
+  housing.append(loupe);
+  const irisCanvas=iris?document.createElement('canvas'):null;
+  if(irisCanvas){
+    irisCanvas.className='prism-iris-sprite-preview';
+    irisCanvas.width=160;irisCanvas.height=90;
+    irisCanvas.setAttribute('aria-hidden','true');
+    iris.append(irisCanvas);
+  }
+  let cues=[],pointerTime=null,chapterTime=null,disposed=false;
+  const images=new Map();
+  const abort=new AbortController();
+  function findCue(time){
+    if(!Number.isFinite(time))return null;
+    // Sorted cues, deterministic nearest cue even when the seek is on a boundary.
+    for(let i=cues.length-1;i>=0;i--)if(time>=cues[i].from)return cues[i];
+    return cues[0]||null;
+  }
+  function paint(canvas,time){
+    if(disposed||!canvas)return;
+    const cue=findCue(time);
+    if(!cue)return;
+    let image=images.get(cue.src);
+    if(!image){
+      image=new Image();
+      image.decoding='async';
+      images.set(cue.src,image);
+      image.onload=()=>{
+        if(disposed)return;
+        paint(loupe,pointerTime);
+        if(irisCanvas&&skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
+      };
+      image.onerror=()=>{if(!disposed)canvas.dataset.frameReady='false';};
+      image.src=cue.src;
+      return;
+    }
+    if(!image.complete||!image.naturalWidth)return;
+    try{
+      if(canvas.width!==cue.w)canvas.width=cue.w;
+      if(canvas.height!==cue.h)canvas.height=cue.h;
+      const ctx=canvas.getContext('2d',{alpha:false});
+      if(!ctx)return;
+      ctx.drawImage(image,cue.x,cue.y,cue.w,cue.h,0,0,cue.w,cue.h);
+      canvas.dataset.frameReady='true';
+    }catch(_){canvas.dataset.frameReady='false';}
+  }
+  const vttUrl=new URL(storyboard,document.baseURI);
+  fetch(vttUrl,{signal:abort.signal})
+    .then(response=>response.ok?response.text():'')
+    .then(raw=>{
+      if(disposed)return;
+      cues=parseStoryboardCues(raw,vttUrl);
+      if(pointerTime!==null)paint(loupe,pointerTime);
+      if(chapterTime!==null && skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
+    }).catch(()=>{/* On a missing storyboard the original native thumbnail remains. */});
+  return {
+    show(time){
+      if(!Number.isFinite(time)||disposed)return;
+      pointerTime=Math.max(0,time);
+      paint(loupe,pointerTime);
+    },
+    showChapter(time){
+      if(!Number.isFinite(time)||disposed||!irisCanvas)return;
+      chapterTime=Math.max(0,time);
+      if(skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
+    },
+    destroy(){
+      disposed=true;abort.abort();
+      for(const image of images.values()){image.onload=null;image.onerror=null;}
+      loupe.remove();irisCanvas?.remove();
+      images.clear();
+    }
+  };
+}
+
 /** Real-frame previews when a clip has no authored storyboard.
  * Native MP4: seek an independent muted, never-playing preview video.
  * Mux: prefer Video.js's generated storyboard; use Mux thumbnail service
  * only while storyboard metadata is unavailable (no user API secrets).
  */
-export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryboard=false}={}){
+export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryboard=false,storyboard=null}={}){
   const housing=skin?.querySelector('.prism-loupe-housing');
   const nativeThumb=housing?.querySelector('.prism-loupe-image');
   if(!housing || !media || !nativeThumb)return {show(){},destroy(){}};
+  // A supplied storyboard is the reliable fast path, especially for remote MP4s.
+  if(storyboard && !muxPlaybackId)return initStoryboardSpritePreview({skin,storyboard});
   const canUseVideo=!muxPlaybackId && !hasStoryboard && media.tagName==='VIDEO';
   const canUseMux=!!muxPlaybackId && /^[A-Za-z0-9]+$/.test(muxPlaybackId);
   if(!canUseVideo && !canUseMux)return {show(){},destroy(){}};
