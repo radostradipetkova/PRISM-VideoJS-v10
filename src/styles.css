@@ -1554,7 +1554,7 @@
 }
 /* On phone-size and small embedded players, keep the movie unobstructed:
    the dock is a separate graphite instrument panel below the video. */
-@container (max-width:480px){
+@container (max-width:600px){
   .prism-skin{
     aspect-ratio:auto;
     height:calc(56.25cqw + 184px);
@@ -1585,7 +1585,7 @@
   .prism-skin .prism-dock-foot{display:none}
 }
 /* Fullscreen restores true video-first proportions, also on a portrait phone. */
-@container (max-width:480px){
+@container (max-width:600px){
   .prism-vjs-player:fullscreen .prism-skin,
   .prism-skin:fullscreen{height:100%;aspect-ratio:auto}
   .prism-vjs-player:fullscreen .prism-skin :is(video.prism-media,mux-video.prism-media),
