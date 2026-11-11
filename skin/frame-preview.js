@@ -331,7 +331,12 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
   const paint=()=>{
     if(disposed || requested===null)return;
     // Native sprite/VTT previews are more precise and should take priority.
-    if(!nativeThumb.hasAttribute('data-hidden'))return;
+    if(!nativeThumb.hasAttribute('data-hidden')){
+      // The Video.js storyboard wins when it becomes available.
+      // Only hide the fallback when a genuine thumbnail is already visible.
+      preview.dataset.frameReady='false';
+      return;
+    }
     const time=muxThumbnailSample(requested,Number(media.duration));
     const url=`https://image.mux.com/${muxPlaybackId}/thumbnail.webp?width=240&time=${time}`;
     if(displayed===url || pendingUrl===url)return;
