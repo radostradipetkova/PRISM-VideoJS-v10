@@ -1,4 +1,4 @@
-import {normalizeChapters, chaptersFromTextTracks, parseChapterVTT, resolveIndex, indexLayout, formatIndexTime} from './chapter-index.js';
+import {normalizeChapters, chaptersFromTextTracks, parseChapterVTT, resolveIndex, indexLayout, formatIndexTime, transcriptMarkers} from './chapter-index.js';
 import {initOpticalFramePreview} from './frame-preview.js';
 /** PRISM 2 / Optical Touch.
  * Progressive enhancements around a genuine Video.js v10 player.
@@ -99,6 +99,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   let entrySignature='';
   let pulseTimer=0;
   let fetchedChapters=[];
+  let fetchedCaptions=[];
   let destroyed=false;
   const abortTracks=new AbortController();
 
@@ -136,7 +137,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
       ? `${String(index+1).padStart(2,'0')} / ${String(entries.length).padStart(2,'0')}`
       : 'FRAME';
     if(lensStatus)lensStatus.textContent=index>=0
-      ? `${Math.round(progress*100)}% OF ${entryType==='time'?'INTERVAL':'CHAPTER'}`
+      ? `${Math.round(progress*100)}% OF ${entryType==='time'?'INTERVAL':entryType==='transcript'?'DIALOGUE':'CHAPTER'}`
       : 'PREVIEW POSITION';
     if(lensNext)lensNext.textContent=context?.next!=null
       ? `NEXT ${formatIndexTime(context.next)}`
@@ -159,7 +160,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     if(index!==lastScrubIndex && lastScrubIndex>=0 && gestureMode==='scrub' && index!==crossingIndex){
       crossingIndex=index;
       vibrate();
-      showFeedback(`${marker.title} / ${entryType==='time'?'TIME MARK':'CHAPTER MARK'}`);
+      showFeedback(`${marker.title} / ${entryType==='time'?'TIME MARK':entryType==='transcript'?'DIALOGUE MARK':'CHAPTER MARK'}`);
       skin.dataset.chapterPulse='true';
       clearTimeout(pulseTimer);
       pulseTimer=setTimeout(()=>delete skin.dataset.chapterPulse,250);
@@ -212,8 +213,8 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     const mode=indexLayout(entries.length);
     dialog.dataset.indexLayout=mode;
     dialog.dataset.indexType=entryType;
-    launch.setAttribute('aria-label',entryType==='time'?'Explore video time markers':'Explore the video chapters');
-    if(heading)heading.textContent=entryType==='time'?'PRISM / TIME INDEX':'PRISM / OPTICAL INDEX';
+    launch.setAttribute('aria-label',entryType==='time'?'Explore video time markers':entryType==='transcript'?'Explore dialogue navigation':'Explore the video chapters');
+    if(heading)heading.textContent=entryType==='time'?'PRISM / TIME INDEX':entryType==='transcript'?'PRISM / DIALOGUE INDEX':'PRISM / OPTICAL INDEX';
     if(searchWrap)searchWrap.hidden=mode!=='library';
     if(search)search.value='';
     const fragment=document.createDocumentFragment();
@@ -239,10 +240,16 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   function refreshIndex(){
     if(destroyed)return;
     const nativeChapters=chaptersFromTextTracks(media);
+    const realCaptionCues=Array.from(media.textTracks||[])
+      .filter(track=>track.kind==='captions'||track.kind==='subtitles')
+      .flatMap(track=>Array.from(track.cues||[]).map(cue=>({time:cue.startTime,title:cue.text})));
+    const derived=chapterMode==='smart'
+      ? transcriptMarkers(realCaptionCues.length?realCaptionCues:fetchedCaptions,duration())
+      : [];
     const resolved=resolveIndex({
       configured:chapters,
       tracked:nativeChapters.length?nativeChapters:fetchedChapters,
-      duration:duration(),mode:chapterMode
+      derived,duration:duration(),mode:chapterMode
     });
     const signature=JSON.stringify([resolved.type,resolved.entries]);
     if(signature!==entrySignature){
@@ -274,16 +281,36 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
         }).catch(()=>{/* native tracks may still load */});
     }
   }
+  // In smart mode, subtitle timestamps can identify useful dialogue beats
+  // without claiming AI scene recognition or fabricating authored chapters.
+  if(chapterMode==='smart'){
+    for(const el of Array.from(media.querySelectorAll('track[kind="captions"],track[kind="subtitles"]'))){
+      const address=el.getAttribute('src');
+      if(!address)continue;
+      fetch(new URL(address,document.baseURI),{signal:abortTracks.signal})
+        .then(response=>response.ok?response.text():'')
+        .then(raw=>{
+          if(destroyed || !raw)return;
+          fetchedCaptions=normalizeChapters(parseChapterVTT(raw));
+          refreshIndex();
+        }).catch(()=>{/* Time markers remain available if transcript can't load. */});
+    }
+  }
   // Chapter tracks may be added to an existing media element programmatically.
   on(media,'loadedmetadata',()=>{refreshIndex();syncLoupe(Number(media.currentTime)||0);});
   on(media,'durationchange',refreshIndex);
   if(media.textTracks){
     const observed=new WeakSet();
     const observeTrack=track=>{
-      if(!track || track.kind!=='chapters' || observed.has(track))return;
-      observed.add(track);
-      on(track,'cuechange',refreshIndex);
-      try{if(track.mode==='disabled')track.mode='hidden';}catch(_){/* browser restriction */}
+      if(!track || observed.has(track))return;
+      if(track.kind==='chapters'){
+        observed.add(track);
+        on(track,'cuechange',refreshIndex);
+        try{if(track.mode==='disabled')track.mode='hidden';}catch(_){/* browser restriction */}
+      }else if(chapterMode==='smart' && (track.kind==='captions'||track.kind==='subtitles')){
+        observed.add(track);
+        on(track,'cuechange',refreshIndex);
+      }
     };
     Array.from(media.textTracks).forEach(observeTrack);
     on(media.textTracks,'addtrack',event=>{observeTrack(event.track);refreshIndex();});
