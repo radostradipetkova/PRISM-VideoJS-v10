@@ -16,11 +16,14 @@ const mount=document.querySelector('#prism-mount');
 // Full-film storyboard is prepared once by the GitHub asset-generation job.
 // Never claim the remote MP4 has a storyboard until the VTT actually exists.
 const fullFilmStoryboard='./assets/tears-of-steel-full-storyboard.vtt';
+// Never block LIVE ACTION indefinitely if a hosting provider stalls on HEAD.
+const liveAssetCheckAbort=new AbortController();
+const liveAssetCheckTimeout=setTimeout(()=>liveAssetCheckAbort.abort(),6000);
 // Both assets must exist. A successful VTT HEAD alone is not proof that the
 // actual frame sprite is deployed (and a 200 HTML fallback is not a storyboard).
 const fullFilmStoryboardProbe=Promise.all([
- fetch(fullFilmStoryboard,{method:'HEAD',cache:'no-store'}),
- fetch('./assets/tears-of-steel-full-storyboard.jpg',{method:'HEAD',cache:'no-store'})
+ fetch(fullFilmStoryboard,{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal}),
+ fetch('./assets/tears-of-steel-full-storyboard.jpg',{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal})
 ]).then(([vtt,sprite])=>{
   const valid= [vtt,sprite].every(response=>response.ok &&
     !(response.headers.get('content-type')||'').toLowerCase().includes('text/html'));
@@ -31,8 +34,8 @@ const fullFilmStoryboardProbe=Promise.all([
 const filmCredit=document.querySelector('#prism-film-credit');
 const filmCutStatus=document.querySelector('#prism-film-cut-status');
 const liveActionExcerptProbe=Promise.all([
- fetch('./assets/tears-of-steel-excerpt.mp4',{method:'HEAD',cache:'no-store'}),
- fetch('./assets/tears-of-steel-excerpt.vtt',{method:'HEAD',cache:'no-store'})
+ fetch('./assets/tears-of-steel-excerpt.mp4',{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal}),
+ fetch('./assets/tears-of-steel-excerpt.vtt',{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal})
 ]).then(([response,subtitles])=>{
  if(response.ok && (response.headers.get('content-type')||'').toLowerCase().includes('video/') &&
     subtitles.ok && (subtitles.headers.get('content-type')||'').toLowerCase().includes('text/vtt')){
@@ -43,7 +46,7 @@ const liveActionExcerptProbe=Promise.all([
 // Resolve the full-film sprite and optional local excerpt BEFORE mounting LIVE ACTION.
 // Without this gate, a user clicking quickly can lock a gray preview in place
 // even when the correct storyboard files exist on the server.
-const liveActionAssetsReady=Promise.allSettled([fullFilmStoryboardProbe,liveActionExcerptProbe]);
+const liveActionAssetsReady=Promise.allSettled([fullFilmStoryboardProbe,liveActionExcerptProbe]).finally(()=>clearTimeout(liveAssetCheckTimeout));
 // A public Mux playback ID can be previewed as LIVE ACTION without rebuilding PRISM.
 const query=new URLSearchParams(location.search);
 const liveMuxCandidate=query.get('liveMux');
