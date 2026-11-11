@@ -25,6 +25,17 @@ export function parseStoryboardCues(raw,baseUrl){
   }
   return cues.sort((a,b)=>a.from-b.from);
 }
+/** Use the closest permitted Mux preview tile, not the start of its interval.
+ * Mux caps thumbnail generation at ~1 image/10s of duration, or 10 total
+ * for assets below 100s; native Mux storyboards remain the primary source.
+ */
+export function muxThumbnailSample(time,duration){
+  const length=Number(duration);
+  const finite=Number.isFinite(length)&&length>0;
+  const interval=finite && length<100?Math.max(1,Math.ceil(length/10)):10;
+  const end=finite?Math.max(0,Math.floor((length-.001)/interval)*interval):Infinity;
+  return Math.max(0,Math.min(end,Math.round(Math.max(0,Number(time)||0)/interval)*interval));
+}
 /** One browser-cached sprite powers both Optical Loupe and Explore.
  * A canvas draws only the selected tile; it never seeks playback or loads
  * a second copy of a 12-minute remote movie.
@@ -141,6 +152,7 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
   if(!canUseVideo && !canUseMux)return {show(){},destroy(){}};
 
   let requested=null, timer=null, disposed=false, waiting=false, lastTime=NaN;
+  let seekFrame=null;
   let preview=null, fallback=null;
   const clear=()=>{if(timer!==null)clearTimeout(timer);timer=null;};
 
@@ -195,11 +207,11 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       irisTimer=null;
       if(canUseVideo)seekIris();
       else if(irisThumb?.hasAttribute('data-hidden')){
-        const sample=Math.floor(irisWanted/10)*10;
+        const sample=muxThumbnailSample(irisWanted,Number(media.duration));
         irisPreview.dataset.frameReady='false';
         irisPreview.src=`https://image.mux.com/${muxPlaybackId}/thumbnail.webp?width=300&time=${sample}`;
       }else irisPreview.dataset.frameReady='false';
-    },85);
+    },32);
   }
   function destroyIris(){
     if(irisTimer!==null)clearTimeout(irisTimer);
@@ -237,26 +249,44 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       housing.append(fallback);
     }
     housing.append(preview);
+    const targetTime=()=>Math.max(0,Math.min(requested??0,Math.max(0,preview.duration-.08)));
+    const frameMatchesPointer=()=>requested!==null && !preview.seeking &&
+      Number.isFinite(preview.duration) && preview.duration>0 &&
+      Math.abs(Number(preview.currentTime)-targetTime())<.12;
     const markReady=()=>{
-      if(disposed || preview.readyState<2)return;
+      if(disposed || preview.readyState<2 || !frameMatchesPointer())return;
       preview.dataset.frameReady='true';
       if(fallback)fallback.dataset.frameReady='false';
     };
-    const attempt=()=>{
-      if(disposed || requested===null || !Number.isFinite(preview.duration) || preview.duration<=0)return;
-      if(preview.seeking){waiting=true;return;}
-      const time=Math.max(0,Math.min(requested,preview.duration-.08));
-      if(Number.isFinite(lastTime)&&Math.abs(time-lastTime)<.2)return;
-      lastTime=time;
-      try{preview.currentTime=time;}catch(_){/* seek may not be supported */}
+    const scheduleSeek=()=>{
+      if(disposed || seekFrame!==null)return;
+      // Coalesce mousemove events to one seek per rendered frame rather than
+      // an 85ms debounce that never fires while the mouse is moving.
+      seekFrame=requestAnimationFrame(()=>{
+        seekFrame=null;
+        if(disposed || requested===null || !Number.isFinite(preview.duration) || preview.duration<=0)return;
+        if(preview.seeking){waiting=true;return;}
+        const time=targetTime();
+        if(Math.abs(Number(preview.currentTime)-time)<.12 && preview.readyState>=2){
+          markReady();
+          return;
+        }
+        if(Number.isFinite(lastTime) && Math.abs(time-lastTime)<.08)return;
+        lastTime=time;
+        try{preview.currentTime=time;}catch(_){lastTime=NaN;}
+      });
     };
-    preview.addEventListener('loadedmetadata',attempt);
+    preview.addEventListener('loadedmetadata',scheduleSeek);
     preview.addEventListener('loadeddata',markReady);
+    preview.addEventListener('canplay',markReady);
     preview.addEventListener('seeked',()=>{
-      markReady();
-      if(waiting){
+      if(!frameMatchesPointer()){
         waiting=false;
-        if(requested!==null && Math.abs(Number(preview.currentTime)-requested)>.22)attempt();
+        lastTime=NaN;
+        scheduleSeek();
+      }else{
+        waiting=false;
+        markReady();
       }
     });
     preview.addEventListener('error',()=>{
@@ -267,13 +297,16 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       show(time){
         if(disposed || !Number.isFinite(time))return;
         requested=Math.max(0,time);
-        clear();
-        // Keep scrubbing responsive without issuing seeks for every pixel.
-        timer=setTimeout(attempt,85);
+        // Never show the frame from the beginning of the previous chapter
+        // while the decoder catches up to the current pointer position.
+        if(!frameMatchesPointer())preview.dataset.frameReady='false';
+        scheduleSeek();
       },
       showChapter,
       destroy(){
         disposed=true;clear();destroyIris();
+        if(seekFrame!==null)cancelAnimationFrame(seekFrame);
+        seekFrame=null;
         preview.pause();
         preview.removeAttribute('src');
         preview.load();
@@ -304,7 +337,7 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       preview.dataset.frameReady='false';
       return;
     }
-    const time=Math.max(0,Math.floor(requested/10)*10);
+    const time=muxThumbnailSample(requested,Number(media.duration));
     const url=`https://image.mux.com/${muxPlaybackId}/thumbnail.webp?width=240&time=${time}`;
     if(preview.src!==url){preview.dataset.frameReady='false';preview.src=url;}
     else if(displayed===url)preview.dataset.frameReady='true';
@@ -313,7 +346,7 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
     show(time){
       if(disposed || !Number.isFinite(time))return;
       requested=time;
-      clear();timer=setTimeout(paint,100);
+      clear();timer=setTimeout(paint,32);
     },
     showChapter,
     destroy(){disposed=true;clear();destroyIris();preview.removeAttribute('src');preview.remove();}

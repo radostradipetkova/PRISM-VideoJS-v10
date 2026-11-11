@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {parseStoryboardCues} from '../src/frame-preview.js';
+import {parseStoryboardCues,muxThumbnailSample} from '../src/frame-preview.js';
 
 const vtt=readFileSync(new URL('../assets/prism-cinematic-storyboard.vtt',import.meta.url),'utf8');
 const origin='https://prism.example/assets/prism-cinematic-storyboard.vtt';
@@ -54,5 +54,33 @@ test('corrupt or undeployed storyboard recovers without touching primary playbac
   assert.match(code,/image\.onerror=\(\)=>\{/);
   assert.match(code,/failedStoryboardFallback\?\.destroy\(\)/);
   assert.match(code,/initStoryboardSpritePreview\(\{skin,media,storyboard\}\)/);
+ }
+});
+
+test('Mux fallback uses the nearest allowed preview instead of chapter/10s floor',()=>{
+  assert.equal(muxThumbnailSample(6,32),8);  // 4s interval for the cinematic reel
+  assert.equal(muxThumbnailSample(15,32),16);
+  assert.equal(muxThumbnailSample(31.9,32),28); // never request past the video
+  assert.equal(muxThumbnailSample(9,734),10); // 10s interval on long films
+  assert.equal(muxThumbnailSample(14,734),10);
+  assert.equal(muxThumbnailSample(16,734),20);
+  assert.equal(muxThumbnailSample(0,0),0);
+  // Short assets generate at most the 10 thumbnails Mux permits.
+  for(const duration of [7,32,65,99,120,734]){
+    const set=new Set();
+    for(let i=0;i<=1000;i++)set.add(muxThumbnailSample(i*duration/1000,duration));
+    assert.ok(set.size<=Math.max(10,Math.ceil(duration/10)),`over quota for duration ${duration}`);
+  }
+});
+
+test('Optical Loupe coalesces decoder seeks to animation frames, not 85ms mouse debounce',()=>{
+ for(const part of ['src','skin']){
+   const code=readFileSync(new URL(`../${part}/frame-preview.js`,import.meta.url),'utf8');
+   assert.match(code,/seekFrame=requestAnimationFrame/);
+   assert.match(code,/if\(!frameMatchesPointer\(\)\)preview\.dataset\.frameReady='false'/);
+   assert.match(code,/if\(!frameMatchesPointer\(\)\)\{/);
+   assert.match(code,/cancelAnimationFrame\(seekFrame\)/);
+   assert.doesNotMatch(code,/timer=setTimeout\(attempt,85\)/);
+   assert.match(code,/muxThumbnailSample\(requested,Number\(media\.duration\)\)/);
  }
 });
