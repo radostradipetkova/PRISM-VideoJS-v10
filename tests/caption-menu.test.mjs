@@ -76,3 +76,17 @@ test('Mux caption controller reads real internal WebVTT tracks, not inert light 
   assert.ok(code.includes("captionStatus.textContent='Subtitle track could not load. Check the VTT file.'"));
  }
 });
+
+// The showcase uses descriptive captions by default (including the Mux reel).
+test('Cinematic Reel captions describe waves and remain enabled after track load',async()=>{
+ const app=await read('src/app.js');
+ const vtt=await read('assets/prism-cinematic.vtt');
+ assert.match(app,/'cinematic':\{captionsDefault:true/);
+ assert.match(vtt,/Waves roll across the coast/);
+ for(const dir of ['src','skin']){
+  const source=await read(dir+'/prism-player.js');
+  assert.match(source,/captionTrackNode\?\.addEventListener\('load',initializeDefaultCaptions\)/);
+  assert.match(source,/mediaForCaptionDefault\?\.addEventListener\('canplay',initializeDefaultCaptions\)/);
+  assert.match(source,/if\(!captionsDefault \|\| captionsWereExplicitlyChanged\)return/);
+ }
+});

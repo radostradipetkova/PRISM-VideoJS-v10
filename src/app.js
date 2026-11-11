@@ -4,7 +4,7 @@ import {initPlayerQA} from './qa-panel.js';
 import {initTypeMotion} from './text-motion.js';
 import {initKeyboardAid} from './keyboard-aid.js';
 const films={
- 'cinematic':{src:'./assets/prism-cinematic.mp4',poster:'./assets/prism-cinematic.jpg',captions:'./assets/prism-cinematic.vtt',title:'A Study in Motion',eyebrow:'PRISM / CINEMATIC SHOWCASE',chaptersVtt:'./assets/prism-cinematic-chapters.vtt',storyboard:'./assets/prism-cinematic-storyboard.vtt'},
+ 'cinematic':{captionsDefault:true,src:'./assets/prism-cinematic.mp4',poster:'./assets/prism-cinematic.jpg',captions:'./assets/prism-cinematic.vtt',title:'A Study in Motion',eyebrow:'PRISM / CINEMATIC SHOWCASE',chaptersVtt:'./assets/prism-cinematic-chapters.vtt',storyboard:'./assets/prism-cinematic-storyboard.vtt'},
  'night':{src:'./assets/night-city.mp4',poster:'./assets/night-city.jpg',captions:'./assets/night-city.vtt',title:'After Hours',eyebrow:'SCENE 01 / LOW LIGHT',chapters:[{time:0,title:'AFTER HOURS'}],storyboard:'./assets/night-city-storyboard.vtt'},
  'coast':{src:'./assets/coast-sunrise.mp4',poster:'./assets/coast-sunrise.jpg',captions:'./assets/coast-sunrise.vtt',title:'First Light',eyebrow:'SCENE 02 / HIGH LIGHT',chapters:[{time:0,title:'FIRST LIGHT'}],storyboard:'./assets/coast-sunrise-storyboard.vtt'},
  'liveaction':{captionsDefault:true,src:'https://video.blender.org/download/web-videos/8533ea43-4271-4a57-9694-e9d0b35e1aa1-720.mp4',poster:'./assets/tears-of-steel-fallback.svg',captions:'./assets/tears-of-steel-full.vtt',captionLabel:'English / original film',title:'Tears of Steel — Open Film',eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',chapters:[],chaptersVtt:'./assets/tears-of-steel-full-chapters.vtt',chapterMode:'auto',storyboard:null}

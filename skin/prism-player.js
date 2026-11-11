@@ -348,10 +348,17 @@ export function mountPrismPlayer(target, options={}) {
   captionMenu?.addEventListener('click',onCaptionClick);
   captionTrigger?.addEventListener('click',captionTrackState);
   captionTrackList?.addEventListener?.('addtrack',initializeDefaultCaptions);
+  // In Mux and native VIDEO the subtitle file can finish loading after
+  // metadata. Re-apply the default when that happens; never override a
+  // viewer's explicit On/Off selection.
+  captionTrackNode?.addEventListener('load',initializeDefaultCaptions);
+  if(actualCaptionNode!==captionTrackNode)
+    actualCaptionNode?.addEventListener('load',initializeDefaultCaptions);
   const player = target.querySelector('video-player');
   const skin = target.querySelector('.prism-skin');
   const mediaForCaptionDefault=mediaElement;
   mediaForCaptionDefault?.addEventListener('loadedmetadata',initializeDefaultCaptions);
+  mediaForCaptionDefault?.addEventListener('canplay',initializeDefaultCaptions);
   if(captionsDefault)initializeDefaultCaptions();
   const statusCopy = target.querySelector('.prism-status-copy');
   const transportCopy = target.querySelector('.prism-transport-state');
@@ -465,7 +472,11 @@ export function mountPrismPlayer(target, options={}) {
       actualCaptionNode?.removeEventListener('error',captionTrackState);
     }
     captionTrackList?.removeEventListener?.('addtrack',initializeDefaultCaptions);
+    captionTrackNode?.removeEventListener('load',initializeDefaultCaptions);
+    if(actualCaptionNode!==captionTrackNode)
+      actualCaptionNode?.removeEventListener('load',initializeDefaultCaptions);
     mediaForCaptionDefault?.removeEventListener('loadedmetadata',initializeDefaultCaptions);
+    mediaForCaptionDefault?.removeEventListener('canplay',initializeDefaultCaptions);
     playerPreferences.destroy();
     fullscreenKeyboard.destroy();
     autoOrientation.destroy();

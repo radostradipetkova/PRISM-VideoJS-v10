@@ -15,6 +15,7 @@ const cues = [
 ['00:00:38','00:00:41',"I'm freaked out! I have nightmares\\nthat I'm being chased..."],
 ['00:00:41','00:00:42','...by these giant robotic claws of death...'],
 ['00:00:42.2','00:00:45','"Forty years later"\\nWhatever, Thom. We\'re done.'],
+['00:00:45','00:00:49.8','[The scene moves forward in time; dialogue pauses.]'],
 ['00:00:50','00:00:53.5',"Robot's memory synced and locked!"],
 ['00:01:01','00:01:03','This is pretty freaky.'],
 ['00:01:57','00:01:59',"Shouldn't you be down there?"],

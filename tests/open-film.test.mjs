@@ -63,3 +63,19 @@ test('Mux uploads can be previewed in live action mode and get adaptive chapter 
  assert.ok(app.includes('muxPlaybackId:liveMuxId'));
  assert.ok(app.includes("const effectiveIndexMode=indexMode??((film==='liveaction'||isMuxCinematic)?'smart':'auto')"));
 });
+
+test('English LIVE ACTION captions have timed cues beyond 39 seconds and do not fake speech',()=>{
+ const full=read('../assets/tears-of-steel-full.vtt');
+ const excerpt=read('../assets/tears-of-steel-excerpt.vtt');
+ assert.match(full,/00:00:38\.000 --> 00:00:41\.000/);
+ assert.match(full,/00:00:41\.000 --> 00:00:42\.000/);
+ assert.match(full,/00:00:45\.000 --> 00:00:49\.800/);
+ assert.match(full,/00:00:50\.000 --> 00:00:53\.500/);
+ assert.match(full,/00:05:39\.000 --> 00:05:41\.000/);
+ assert.match(excerpt,/00:00:38\.000 --> 00:00:48\.800/);
+ assert.match(excerpt,/00:00:49\.000 --> 00:00:51\.000/);
+ // Spoken dialogue remains the original transcript; inserted cue is
+ // explicitly descriptive, not attributed to a speaker.
+ assert.match(full,/\[The scene moves forward in time; dialogue pauses\.\]/);
+ assert.match(excerpt,/\[Dialogue pauses as the scene continues\.\]/);
+});
