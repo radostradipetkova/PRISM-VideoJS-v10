@@ -169,6 +169,36 @@ async def check(browser_type, name, url, reportdir):
             })''')
             outcomes['showcase_mux_caption_diagnostics']=info
             print('MUX_CAPTION_DIAGNOSTICS',json.dumps(info))
+        # Cinematic's real storyboard is a deterministic fixture for the
+        # identical sprite-rendering path used by the full Live Action film.
+        await page.goto(url+'/?source=local',wait_until='domcontentloaded',timeout=25000)
+        await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
+        await page.wait_for_function('''() => {
+            const v=document.querySelector('#prism-mount video.prism-media');
+            return Number.isFinite(v?.duration) && v.duration>25;
+        }''',timeout=20000)
+        canvas=page.locator('#prism-mount canvas.prism-loupe-sprite-preview')
+        await canvas.wait_for(timeout=10000)
+        rail=page.locator('#prism-mount .prism-rail')
+        async def pointer_at(frac):
+            await rail.evaluate('''(el,p)=>{
+                const r=el.getBoundingClientRect();
+                el.dispatchEvent(new PointerEvent('pointermove',{
+                    bubbles:true,pointerType:'mouse',clientX:r.left+r.width*p,
+                    clientY:r.top+r.height/2
+                }));
+            }''',frac)
+        media_before=await page.locator('#prism-mount video.prism-media').evaluate('v=>v.currentTime')
+        await pointer_at(.20)
+        await page.wait_for_function('document.querySelector("#prism-mount canvas.prism-loupe-sprite-preview")?.dataset.frameReady==="true"',timeout=15000)
+        first=await canvas.evaluate('c=>c.toDataURL("image/png")')
+        await pointer_at(.83)
+        await page.wait_for_timeout(350)
+        last=await canvas.evaluate('c=>c.toDataURL("image/png")')
+        assert first!=last, 'The loupe image did not follow the requested film timestamp'
+        media_after=await page.locator('#prism-mount video.prism-media').evaluate('v=>v.currentTime')
+        assert abs(media_after-media_before)<.35, 'Preview scrub incorrectly sought main playback'
+        outcomes['sprite_preview_shows_real_distinct_frames_without_seeking']=True
     except Exception as e:
         outcomes['FAILURE']=str(e)
         try:await page.screenshot(path=str(reportdir/f'release-{name}-failure.png'),full_page=True)
