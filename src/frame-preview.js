@@ -1,6 +1,6 @@
 /** Decode WebVTT sprite regions without tying preview rendering to MP4 ranges. */
 export function parseStoryboardCues(raw,baseUrl){
-  if(typeof raw!=='string'||!/^\\uFEFF?WEBVTT(?:\\s|$)/.test(raw))return [];
+  if(typeof raw!=='string'||!/^\uFEFF?WEBVTT(?:\s|$)/.test(raw))return [];
   const clock=value=>{
     const numbers=value.trim().split(':');
     if(numbers.length!==2&&numbers.length!==3)return NaN;
@@ -9,13 +9,13 @@ export function parseStoryboardCues(raw,baseUrl){
     return hours*3600+minutes*60+seconds;
   };
   const cues=[];
-  for(const block of raw.replace(/\\r/g,'').split(/\\n\\s*\\n/).slice(1)){
-    const lines=block.split('\\n').map(s=>s.trim()).filter(Boolean);
+  for(const block of raw.replace(/\r/g,'').split(/\n\s*\n/).slice(1)){
+    const lines=block.split('\n').map(s=>s.trim()).filter(Boolean);
     const separator=lines.findIndex(s=>s.includes('-->'));
     if(separator<0||separator+1>=lines.length)continue;
-    const [a,b]=lines[separator].split('-->').map(s=>s.trim().split(/\\s+/)[0]);
+    const [a,b]=lines[separator].split('-->').map(s=>s.trim().split(/\s+/)[0]);
     const from=clock(a),to=clock(b);
-    const frame=lines[separator+1].match(/^(.+?)#xywh=(\\d+),(\\d+),(\\d+),(\\d+)$/i);
+    const frame=lines[separator+1].match(/^(.+?)#xywh=(\d+),(\d+),(\d+),(\d+)$/i);
     if(!(Number.isFinite(from)&&Number.isFinite(to)&&to>from&&frame))continue;
     const [x,y,w,h]=frame.slice(2).map(Number);
     if(w<1||h<1||w>4096||h>4096)continue;
