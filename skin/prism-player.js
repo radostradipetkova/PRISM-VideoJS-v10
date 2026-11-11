@@ -371,7 +371,7 @@ export function mountPrismPlayer(target, options={}) {
   const opticalTouch = initOpticalTouch({skin,media:mediaElement,chapters,chapterMode,muxPlaybackId,storyboard});
   const sceneLoop=initSceneLoop({skin,media:mediaElement,getChapters:()=>{
     const index=opticalTouch.getIndex();
-    return index.type==='chapters'?index:{type:'chapters',entries:normalizeChapters(chapters,Number(mediaElement.duration)||NaN)};
+    return index.type!=='none'?index:{type:'chapters',entries:normalizeChapters(chapters,Number(mediaElement.duration)||NaN)};
   }});
   const autoOrientation = initFullscreenOrientation({player,skin,media:mediaElement,enabled:initialPreferences.autoRotate});
   const fullscreenKeyboard = initWebKitFullscreenKeyboard({player,button:skin.querySelector('.prism-fullscreen')});
