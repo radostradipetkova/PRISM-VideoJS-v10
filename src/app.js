@@ -7,7 +7,7 @@ const films={
  'cinematic':{src:'./assets/prism-cinematic.mp4',poster:'./assets/prism-cinematic.jpg',captions:'./assets/prism-cinematic.vtt',title:'A Study in Motion',eyebrow:'PRISM / CINEMATIC SHOWCASE',chaptersVtt:'./assets/prism-cinematic-chapters.vtt',storyboard:'./assets/prism-cinematic-storyboard.vtt'},
  'night':{src:'./assets/night-city.mp4',poster:'./assets/night-city.jpg',captions:'./assets/night-city.vtt',title:'After Hours',eyebrow:'SCENE 01 / LOW LIGHT',chapters:[{time:0,title:'AFTER HOURS'}],storyboard:'./assets/night-city-storyboard.vtt'},
  'coast':{src:'./assets/coast-sunrise.mp4',poster:'./assets/coast-sunrise.jpg',captions:'./assets/coast-sunrise.vtt',title:'First Light',eyebrow:'SCENE 02 / HIGH LIGHT',chapters:[{time:0,title:'FIRST LIGHT'}],storyboard:'./assets/coast-sunrise-storyboard.vtt'},
- 'liveaction':{captionsDefault:true,src:'https://video.blender.org/download/web-videos/8533ea43-4271-4a57-9694-e9d0b35e1aa1-720.mp4',poster:'./assets/tears-of-steel-fallback.svg',captions:'./assets/tears-of-steel-full.vtt',captionLabel:'English / original film',title:'Tears of Steel — Open Film',eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',chapters:[],chapterMode:'none',storyboard:null}
+ 'liveaction':{captionsDefault:true,src:'https://video.blender.org/download/web-videos/8533ea43-4271-4a57-9694-e9d0b35e1aa1-720.mp4',poster:'./assets/tears-of-steel-fallback.svg',captions:'./assets/tears-of-steel-full.vtt',captionLabel:'English / original film',title:'Tears of Steel — Open Film',eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',chapters:[],chaptersVtt:'./assets/tears-of-steel-full-chapters.vtt',chapterMode:'auto',storyboard:null}
 };
 const mount=document.querySelector('#prism-mount');
 // A real public open movie provides an immediate optional demo. Running
@@ -21,11 +21,20 @@ Promise.all([
 ]).then(([response,subtitles])=>{
  if(response.ok && (response.headers.get('content-type')||'').toLowerCase().includes('video/') &&
     subtitles.ok && (subtitles.headers.get('content-type')||'').toLowerCase().includes('text/vtt')){
-  films.liveaction={captionsDefault:true,src:'./assets/tears-of-steel-excerpt.mp4',poster:'./assets/tears-of-steel-poster.jpg',captions:'./assets/tears-of-steel-excerpt.vtt',captionLabel:'English / excerpt',title:'Tears of Steel — 65-second excerpt',eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',chaptersVtt:'./assets/tears-of-steel-chapters.vtt',storyboard:'./assets/tears-of-steel-storyboard.vtt'};
+  if(!new URLSearchParams(location.search).has('liveMux'))films.liveaction={captionsDefault:true,src:'./assets/tears-of-steel-excerpt.mp4',poster:'./assets/tears-of-steel-poster.jpg',captions:'./assets/tears-of-steel-excerpt.vtt',captionLabel:'English / excerpt',title:'Tears of Steel — 65-second excerpt',eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',chaptersVtt:'./assets/tears-of-steel-chapters.vtt',storyboard:'./assets/tears-of-steel-storyboard.vtt'};
   if(filmCutStatus)filmCutStatus.textContent='OPEN FILM / 65-SECOND EDIT';
  }
 }).catch(()=>{/* Stream the full open film if the optional local excerpt is absent. */});
+// A public Mux playback ID can be previewed as LIVE ACTION without rebuilding PRISM.
 const query=new URLSearchParams(location.search);
+const liveMuxCandidate=query.get('liveMux');
+const liveMuxId=liveMuxCandidate && /^[A-Za-z0-9]+$/.test(liveMuxCandidate)?liveMuxCandidate:null;
+if(liveMuxId)films.liveaction={
+  src:`https://stream.mux.com/${liveMuxId}.m3u8`,muxPlaybackId:liveMuxId,
+  poster:`https://image.mux.com/${liveMuxId}/thumbnail.webp?width=960&time=2`,
+  title:'Mux / Uploaded Live-Action Video',eyebrow:'LIVE ACTION / MUX STREAM',
+  captions:null,chapters:[],chaptersVtt:null,storyboard:null
+};
 // Public Mux playback ID used for the primary four-chapter competition film.
 // The optional ?mux=ID preview stays available; ?source=local uses the original MP4.
 export const PRISM_MUX_PLAYBACK_ID='i4NN2nQSVFk5TDkOtoLIfUUt2e6h5ah02j9ebYxzXxDM';
@@ -34,7 +43,7 @@ const muxId=muxOverride && /^[A-Za-z0-9]+$/.test(muxOverride) ? muxOverride : PR
 let useLocalCinematic=query.get('source')==='local';
 // Optical Index defaults to authored chapters; ?index=time opts into neutral
 // duration-based markers, and ?index=none hides navigation altogether.
-const indexMode=['auto','time','none'].includes(query.get('index'))?query.get('index'):'auto';
+const indexMode=['auto','smart','time','none'].includes(query.get('index'))?query.get('index'):null;
 let current=null;
 let currentFilm='cinematic';
 let playerPreferences={};
@@ -71,7 +80,8 @@ function load(film='cinematic'){
  // Four original scene buttons belong only to the 32-second reel.
  document.querySelector('.chapter-bar').hidden=film!=='cinematic'||foreignMux;
  if(filmCredit)filmCredit.hidden=film!=='liveaction';
- current=mountPrismPlayer(mount,{...films[film], chapterMode:indexMode, preferences:playerPreferences, playbackRate:previousRate,
+ const effectiveIndexMode=indexMode??((film==='liveaction'||isMuxCinematic)?'smart':'auto');
+ current=mountPrismPlayer(mount,{...films[film], chapterMode:effectiveIndexMode, preferences:playerPreferences, playbackRate:previousRate,
    ...(foreignMux?{chapters:[],chaptersVtt:null}:{}),
    ...(isMuxCinematic?{muxPlaybackId:muxId}:{})});
  runtimeNote.hidden=true;
