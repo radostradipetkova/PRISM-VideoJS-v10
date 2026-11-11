@@ -1194,3 +1194,106 @@
  .prism-skin .prism-loupe-position{font-size:9px}
  .prism-skin .prism-loupe-footer{font-size:8px}
 }
+
+/* PRISM 2.7 — MOBILE TRANSPORT HIERARCHY
+   Maintain the Optical Deck but make essential playback actions obvious.
+   CSS-only: the real Video.js controls, DOM order, keyboard navigation,
+   seek rail and menu behavior all remain intact. */
+@container (max-width:600px){
+  .prism-skin .prism-control-row{
+    display:flex;flex-direction:column;align-items:stretch;
+    justify-content:initial;gap:6px;margin-top:2px;padding-top:4px;
+    min-height:0;border-top:1px solid rgba(250,221,199,.18);
+  }
+  .prism-skin .prism-group-left,
+  .prism-skin .prism-group-right{
+    width:100%;min-width:0;margin:0;display:flex;align-items:center;
+    justify-content:space-between;gap:0;
+  }
+  .prism-skin .prism-group-left{min-height:50px}
+  .prism-skin .prism-play{
+    min-width:50px;min-height:50px;margin:0;
+    border-color:#ffc4a3;box-shadow:0 0 0 2px rgba(241,135,83,.10);
+  }
+  .prism-skin .prism-play svg{width:22px;height:22px}
+  .prism-skin .prism-group-left .prism-time{
+    margin:0 0 0 auto;font-size:15px;font-weight:700;
+    gap:7px;letter-spacing:0;font-variant-numeric:tabular-nums;
+  }
+  .prism-skin .prism-group-left .prism-time media-time{min-width:38px}
+  .prism-skin .prism-group-right{
+    min-height:50px;padding-top:5px;
+    border-top:1px solid rgba(245,211,185,.13);
+  }
+  .prism-skin .prism-group-right .prism-control{
+    min-width:44px;min-height:44px;padding:9px;margin:0;
+    flex:0 0 auto;
+  }
+  .prism-skin .prism-group-right :is(.prism-mute,.prism-fullscreen){
+    color:#fff1df;background:rgba(242,169,125,.13);
+    box-shadow:inset 0 0 0 1px rgba(250,205,174,.46);
+    border-radius:3px;
+  }
+  .prism-skin .prism-group-right :is(.prism-settings-trigger,.prism-captions-trigger,.prism-loop-trigger){
+    color:#d8c6b6;background:transparent;
+  }
+  .prism-skin .prism-group-right .prism-control:focus-visible{
+    outline:3px solid #ffc3a0;outline-offset:1px;
+  }
+  .prism-skin .prism-rail{
+    min-height:44px;height:44px;
+  }
+  .prism-skin .prism-rail-track{height:6px}
+  .prism-skin .prism-thumb{width:18px;height:18px}
+  .prism-skin .prism-thumb span{width:11px;height:11px}
+  .prism-skin .prism-volume,.prism-skin .prism-separator{display:none!important}
+  .prism-skin .prism-group-left .prism-skip,
+  .prism-skin .prism-group-right .prism-pip{display:none}
+}
+/* On phone-size and small embedded players, keep the movie unobstructed:
+   the dock is a separate graphite instrument panel below the video. */
+@container (max-width:480px){
+  .prism-skin{
+    aspect-ratio:auto;
+    height:calc(56.25cqw + 184px);
+    background:#151a1c;
+  }
+  .prism-skin :is(video.prism-media,mux-video.prism-media){
+    height:56.25cqw;bottom:auto;
+  }
+  .prism-skin .prism-center-play{top:28.125cqw}
+  .prism-skin .prism-bottom{
+    top:56.25cqw;bottom:0;padding:0 6px;
+    background:#171c1f;transform:none;
+    border-top:1px solid rgba(247,163,114,.36);
+  }
+  .prism-skin .prism-dock{
+    height:100%;min-height:0;box-shadow:none;
+    background:transparent;border:0;
+    padding:5px 7px 3px;
+  }
+  .prism-skin .prism-rail-meta{margin-bottom:1px}
+  .prism-skin .prism-control-row{margin-top:1px}
+  .prism-skin .prism-controls:not([data-visible]):not(:has(:focus-visible)) .prism-bottom{
+    opacity:1;visibility:visible;transform:none;pointer-events:auto;
+  }
+  .prism-skin .prism-group-right .prism-control{
+    min-width:44px;min-height:44px;
+  }
+  .prism-skin .prism-dock-foot{display:none}
+}
+/* Fullscreen restores true video-first proportions, also on a portrait phone. */
+@container (max-width:480px){
+  .prism-vjs-player:fullscreen .prism-skin,
+  .prism-skin:fullscreen{height:100%;aspect-ratio:auto}
+  .prism-vjs-player:fullscreen .prism-skin :is(video.prism-media,mux-video.prism-media),
+  .prism-skin:fullscreen :is(video.prism-media,mux-video.prism-media){
+    height:100%;bottom:0;
+  }
+  .prism-vjs-player:fullscreen .prism-skin .prism-center-play,
+  .prism-skin:fullscreen .prism-center-play{top:47%}
+  .prism-vjs-player:fullscreen .prism-skin .prism-bottom,
+  .prism-skin:fullscreen .prism-bottom{
+    top:auto;bottom:0;background:linear-gradient(to bottom,transparent,rgba(13,16,18,.95));
+  }
+}
