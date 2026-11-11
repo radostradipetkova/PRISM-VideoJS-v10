@@ -185,6 +185,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     const marker=entries[index];
     if(!marker)return;
     irisThumbnail?.setAttribute('time',String(marker.time));
+    framePreview.showChapter?.(marker.time);
     if(irisLabel)irisLabel.textContent=marker.title;
   }
   function applySearch(){
@@ -376,6 +377,8 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     previewChapter(Math.max(0,chapterOf(Number(media.currentTime)||0)));
     launch.setAttribute('aria-expanded','true');
     dialog.showModal();
+    // Populate a real video frame after dialog.open becomes true.
+    previewChapter(Math.max(0,chapterOf(Number(media.currentTime)||0)));
     // For a library of 13+ chapters, searching is more efficient than
     // tabbing through dozens of entries. Keep the radial dial's original
     // active-chapter focus for short videos.
