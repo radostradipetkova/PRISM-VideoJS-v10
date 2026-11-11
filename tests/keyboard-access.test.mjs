@@ -33,7 +33,7 @@ test('showcase Space works outside the player while native v10 hotkeys remain sc
 // stealing Escape from open menus, dialogs, preferences or fullscreen.
 test('Escape clears Tab focus only when player overlays are closed',async()=>{
  for(const where of ['src','skin']){
-  const source=await read(where+'/prism-player.js');
+  const source=readFileSync(new URL(`../${where}/prism-player.js`,import.meta.url),'utf8');
   assert.match(source,/skin\.addEventListener\('keydown',clearTabFocusOnEscape,true\)/);
   assert.match(source,/skin\.removeEventListener\('keydown',clearTabFocusOnEscape,true\)/);
   assert.match(source,/event\.key!=='Escape'/);
