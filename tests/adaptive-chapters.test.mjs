@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalizeChapters, chaptersFromTextTracks, timeMarkers, resolveIndex,
-  indexLayout, parseChapterVTT, formatIndexTime} from '../src/chapter-index.js';
+  indexLayout, parseChapterVTT, formatIndexTime, transcriptMarkers} from '../src/chapter-index.js';
 const read=name=>readFileSync(new URL('../'+name,import.meta.url),'utf8');
 const mk=n=>Array.from({length:n},(_,i)=>({time:i*90,title:`Chapter ${i+1}`}));
 
@@ -76,4 +76,34 @@ test('chapter boundaries before a late first chapter do not mark it active',asyn
   assert.equal(chapterAtTime(chapters,29),-1);
   assert.equal(chapterAtTime(chapters,30),0);
   assert.equal(chapterAtTime(chapters,75),1);
+});
+
+test('smart index provides working navigation for arbitrary Mux video durations',()=>{
+ const r=resolveIndex({duration:540,mode:'smart'});
+ assert.equal(r.type,'time');
+ assert.equal(r.entries.length,6);
+ assert.equal(r.entries[0].time,0);
+ assert.equal(r.entries[4].time,360);
+ assert.equal(resolveIndex({duration:540,mode:'none'}).type,'none');
+});
+test('smart index prefers caption-derived dialogue beats and never replaces authored chapters',()=>{
+ const cues=[
+  {time:10,title:'First conversation'},
+  {time:38,title:'The signal goes out'},
+  {time:92,title:'A breakthrough'},
+  {time:128,title:'Preparing a response'},
+  {time:176,title:'The surprise'},
+  {time:221,title:'A second plan'},
+  {time:258,title:'Confrontation'},
+  {time:307,title:'A resolution'}
+ ];
+ const derived=transcriptMarkers(cues,360);
+ assert.ok(derived.length>=3);
+ assert.equal(derived[0].time,0);
+ const r=resolveIndex({duration:360,derived,mode:'smart'});
+ assert.equal(r.type,'transcript');
+ assert.deepEqual(r.entries,derived);
+ const explicit=resolveIndex({configured:[{time:0,title:'Director cut'},{time:120,title:'Final'}],derived,mode:'smart',duration:360});
+ assert.equal(explicit.type,'chapters');
+ assert.equal(explicit.entries.length,2);
 });
