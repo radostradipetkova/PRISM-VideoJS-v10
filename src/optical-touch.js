@@ -1,4 +1,5 @@
 import {normalizeChapters, chaptersFromTextTracks, parseChapterVTT, resolveIndex, indexLayout, formatIndexTime} from './chapter-index.js';
+import {initOpticalFramePreview} from './frame-preview.js';
 /** PRISM 2 / Optical Touch.
  * Progressive enhancements around a genuine Video.js v10 player.
  * The native media element remains the single source of playback truth.
@@ -57,8 +58,9 @@ export function isInteractionTarget(element){
   ));
 }
 
-export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto'}){
+export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxPlaybackId=null,storyboard=null}){
   const rail=skin.querySelector('.prism-rail');
+  const framePreview=initOpticalFramePreview({skin,media,muxPlaybackId,hasStoryboard:Boolean(storyboard)});
   skin.querySelector('.prism-preview')?.classList.add('prism-optical-loupe');
   const lensLabel=skin.querySelector('.prism-loupe-chapter');
   const lensPosition=skin.querySelector('.prism-loupe-position');
@@ -125,6 +127,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto'}){
     return clamp((event.clientX-rect.left)/Math.max(1,rect.width),0,1)*duration();
   };
   function syncLoupe(time){
+    framePreview.show(Number(time));
     const context=loupeChapterContext(entries,time,duration());
     const index=context?.index??-1;
     const progress=context?.progress??0;
@@ -520,6 +523,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto'}){
     destroy(){
     destroyed=true;
     abortTracks.abort();
+    framePreview.destroy();
     closeDialog();
     onTouchCancel();
     clearTimeout(hudTimer);clearTimeout(pulseTimer);clearGlassTimer();
