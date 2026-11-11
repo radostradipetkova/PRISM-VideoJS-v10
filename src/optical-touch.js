@@ -60,7 +60,7 @@ export function isInteractionTarget(element){
 
 export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxPlaybackId=null,storyboard=null}){
   const rail=skin.querySelector('.prism-rail');
-  const framePreview=initOpticalFramePreview({skin,media,muxPlaybackId,hasStoryboard:Boolean(storyboard)});
+  const framePreview=initOpticalFramePreview({skin,media,muxPlaybackId,hasStoryboard:Boolean(storyboard),storyboard});
   skin.querySelector('.prism-preview')?.classList.add('prism-optical-loupe');
   const lensLabel=skin.querySelector('.prism-loupe-chapter');
   const lensPosition=skin.querySelector('.prism-loupe-position');
