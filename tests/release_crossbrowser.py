@@ -248,7 +248,7 @@ async def check(browser_type, name, url, reportdir):
             total=len(mp4)
             async def blender_fixture(route):
                 header=route.request.headers.get('range','')
-                match=re.fullmatch(r'bytes=(\\d+)-(\\d*)',header)
+                match=re.fullmatch(r'bytes=(\d+)-(\d*)',header)
                 headers={'Access-Control-Allow-Origin':'*','Accept-Ranges':'bytes',
                          'Content-Type':'video/mp4'}
                 if match:
