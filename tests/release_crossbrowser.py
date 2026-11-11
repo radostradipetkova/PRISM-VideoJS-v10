@@ -8,7 +8,7 @@ Run on a machine/CI with Playwright browsers installed:
 This file is not counted as passed until it has actually executed successfully.
 """
 from __future__ import annotations
-import argparse, asyncio, json, os, subprocess, time, urllib.request
+import argparse, asyncio, json, os, subprocess, time, urllib.request, traceback
 from pathlib import Path
 from playwright.async_api import async_playwright
 
@@ -180,12 +180,14 @@ async def check(browser_type, name, url, reportdir):
             print('MUX_CAPTION_DIAGNOSTICS',json.dumps(info))
         # Cinematic's real storyboard is a deterministic fixture for the
         # identical sprite-rendering path used by the full Live Action film.
+        outcomes['phase']='local cinematic reel / navigation'
         await page.goto(url+'/?source=local',wait_until='domcontentloaded',timeout=25000)
         await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
         await page.wait_for_function('''() => {
             const v=document.querySelector('#prism-mount video.prism-media');
             return Number.isFinite(v?.duration) && v.duration>25;
         }''',timeout=20000)
+        outcomes['phase']='local cinematic reel / Optical Loupe sprite'
         canvas=page.locator('#prism-mount canvas.prism-loupe-sprite-preview')
         await canvas.wait_for(timeout=10000)
         rail=page.locator('#prism-mount .prism-rail')
@@ -208,8 +210,11 @@ async def check(browser_type, name, url, reportdir):
         media_after=await page.locator('#prism-mount video.prism-media').evaluate('v=>v.currentTime')
         assert abs(media_after-media_before)<.35, 'Preview scrub incorrectly sought main playback'
         outcomes['sprite_preview_shows_real_distinct_frames_without_seeking']=True
+        outcomes.pop('phase',None)
     except Exception as e:
-        outcomes['FAILURE']=str(e)
+        outcomes['FAILURE']=f'{type(e).__name__}: {e!r}'
+        outcomes['failure_phase']=outcomes.get('phase','earlier browser checks')
+        outcomes['traceback']=traceback.format_exc(limit=8)
         try:await page.screenshot(path=str(reportdir/f'release-{name}-failure.png'),full_page=True)
         except Exception:pass
     finally:
