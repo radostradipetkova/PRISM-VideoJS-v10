@@ -366,7 +366,7 @@ export function mountPrismPlayer(target, options={}) {
   }
   for (const event of observers) mediaElement.addEventListener(event,syncTransport);
   syncTransport();
-  const opticalTouch = initOpticalTouch({skin,media:mediaElement,chapters,chapterMode});
+  const opticalTouch = initOpticalTouch({skin,media:mediaElement,chapters,chapterMode,muxPlaybackId,storyboard});
   const sceneLoop=initSceneLoop({skin,media:mediaElement,getChapters:()=>{
     const index=opticalTouch.getIndex();
     return index.type==='chapters'?index:{type:'chapters',entries:normalizeChapters(chapters,Number(mediaElement.duration)||NaN)};
