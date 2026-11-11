@@ -36,3 +36,23 @@ test('Both PRISM players use the actual sprite to draw previews instead of seeki
    assert.ok(css.includes('.prism-iris-sprite-preview[data-frame-ready="true"]'));
  }
 });
+
+test('LIVE ACTION checks complete storyboard assets before mounting a film',()=>{
+ const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
+ assert.match(app,/const fullFilmStoryboardProbe=Promise\.all/);
+ assert.match(app,/tears-of-steel-full-storyboard\.vtt/);
+ assert.match(app,/tears-of-steel-full-storyboard\.jpg/);
+ assert.match(app,/const liveActionAssetsReady=Promise\.allSettled/);
+ assert.match(app,/liveActionAssetsReady\.then/);
+ assert.match(app,/serial===filmSelectionSerial/);
+});
+
+test('corrupt or undeployed storyboard recovers without touching primary playback',()=>{
+ for(const scope of ['src','skin']){
+  const code=readFileSync(new URL(`../${scope}/frame-preview.js`,import.meta.url),'utf8');
+  assert.match(code,/if\(!cues\.length\)\{useVideoFallback\(\);return;\}/);
+  assert.match(code,/image\.onerror=\(\)=>\{/);
+  assert.match(code,/failedStoryboardFallback\?\.destroy\(\)/);
+  assert.match(code,/initStoryboardSpritePreview\(\{skin,media,storyboard\}\)/);
+ }
+});
