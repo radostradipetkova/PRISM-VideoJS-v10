@@ -42,7 +42,7 @@ export function mountPrismPlayer(target, options={}) {
   if (!src && !muxPlaybackId) throw new Error('PRISM requires src or muxPlaybackId to play a video');
   target.classList.add('prism-mount');
   const uid = `prism-${Math.random().toString(36).slice(2,9)}`;
-  const rateMenu=`${uid}-rate`, ccMenu=`${uid}-cc`, prefMenu=`${uid}-preferences`;
+  const rateMenu=`${uid}-rate`, ccMenu=`${uid}-cc`, loopMenu=`${uid}-loop`, prefMenu=`${uid}-preferences`;
   const store=safeStorage();
   const remembered=readRememberedSettings(store,preferencesStorageKey);
   // Explicit embedder/player options take precedence over stored defaults.
@@ -151,7 +151,21 @@ export function mountPrismPlayer(target, options={}) {
                     <div class="prism-caption-preview" aria-hidden="true"><span class="prism-caption-sample">Every frame tells a story.</span></div>
                   </div>
                 </media-menu-content></media-menu>` : ''}
-                <button class="prism-control prism-loop-trigger" type="button" aria-label="Scene loop — open settings" title="Scene Loop">${icon.loop}</button>
+                <button class="prism-control prism-loop-trigger" type="button" commandfor="${loopMenu}" aria-label="Scene loop controls" title="Scene Loop">${icon.loop}</button>
+                <media-menu id="${loopMenu}" class="prism-menu prism-loop-menu" side="top" align="end"><media-menu-content>
+                  <section class="prism-loop-group" data-loop-panel aria-label="Scene loop controls">
+                    <div class="prism-loop-menu-heading"><div class="prism-menu-title">SCENE LOOP</div></div>
+                    <p data-loop-context>Waiting for media information…</p>
+                    <p class="prism-loop-status" data-loop-status role="status" aria-live="polite">Choose a chapter or mark two positions to repeat.</p>
+                    <button class="prism-loop-action prism-loop-primary" type="button" data-loop-chapter aria-pressed="false">↻ LOOP THIS CHAPTER</button>
+                    <div class="prism-loop-divider" aria-hidden="true">IN / OUT</div>
+                    <p class="prism-loop-hint">Seek to your scene's start and end to mark a custom repeat.</p>
+                    <div class="prism-loop-mark-actions"><button class="prism-loop-action" type="button" data-loop-in>MARK IN (A)</button><button class="prism-loop-action" type="button" data-loop-out>MARK OUT (B)</button></div>
+                    <p class="prism-loop-range" data-loop-range>IN --:-- → OUT --:--</p>
+                    <button class="prism-loop-action prism-loop-primary" type="button" data-loop-ab aria-pressed="false">↻ LOOP A–B</button>
+                    <button class="prism-loop-action prism-loop-stop" type="button" data-loop-off disabled>STOP LOOP</button>
+                  </section>
+                </media-menu-content></media-menu>
                 <button class="prism-control prism-preferences-trigger" type="button" aria-haspopup="dialog" aria-label="Player preferences" aria-expanded="false" aria-controls="${prefMenu}" title="Player preferences">${icon.preferences}</button>
                 <media-pip-button class="prism-control prism-pip">${icon.pip}</media-pip-button>
                 <media-fullscreen-button class="prism-control prism-fullscreen">${state('fs-state',icon.fullscreenExit,icon.fullscreen)}</media-fullscreen-button>
@@ -169,17 +183,6 @@ export function mountPrismPlayer(target, options={}) {
         <label class="prism-preferences-toggle"><span><strong>03 / MINIMAL MOTION</strong><small>Reduce nonessential animation.</small></span><input type="checkbox" data-pref-motion aria-label="Minimal motion"></label>
         <label class="prism-preferences-toggle" data-pref-touch-only hidden><span><strong>04 / TOUCH SWIPES</strong><small>Allow seek gestures outside fullscreen.</small></span><input type="checkbox" data-pref-touch-swipes aria-label="Touch swipes outside fullscreen"></label>
         <label class="prism-preferences-toggle" data-pref-touch-only hidden><span><strong>05 / SMART ROTATION</strong><small>Try to orient fullscreen with the video on compatible devices.</small></span><input type="checkbox" data-pref-auto-rotate aria-label="Smart fullscreen rotation"></label>
-        <fieldset class="prism-preferences-group prism-loop-group" data-loop-panel>
-          <legend>06 / SCENE LOOP <span class="prism-loop-symbol" aria-hidden="true">${icon.loop}</span></legend>
-          <p data-loop-context>Waiting for media information…</p>
-          <p class="prism-loop-status" data-loop-status role="status" aria-live="polite">Choose a chapter or two time points to repeat.</p>
-          <button class="prism-loop-action prism-loop-primary" type="button" data-loop-chapter aria-pressed="false">↻ LOOP THIS CHAPTER</button>
-          <p class="prism-loop-hint">For any video without chapters, play or seek to the start and end of your scene:</p>
-          <div class="prism-loop-mark-actions"><button class="prism-loop-action" type="button" data-loop-in>MARK IN (A)</button><button class="prism-loop-action" type="button" data-loop-out>MARK OUT (B)</button></div>
-          <p class="prism-loop-range" data-loop-range>IN --:-- → OUT --:--</p>
-          <button class="prism-loop-action prism-loop-primary" type="button" data-loop-ab aria-pressed="false">↻ LOOP A–B</button>
-          <button class="prism-loop-action prism-loop-stop" type="button" data-loop-off disabled>STOP LOOP</button>
-        </fieldset>
         <details class="prism-keyboard-guide" data-keyboard-guide>
           <summary><span>07 / KEYBOARD SHORTCUTS</span><span class="prism-keyboard-guide-expand" aria-hidden="true"><span class="prism-keyboard-guide-view">VIEW KEYS</span><span class="prism-keyboard-guide-hide">HIDE KEYS</span><span class="prism-keyboard-guide-chevron">⌄</span></span></summary>
           <div class="prism-keyboard-guide-content">
@@ -429,20 +432,12 @@ export function mountPrismPlayer(target, options={}) {
   mediaElement.addEventListener('loadedmetadata',restorePlaybackRate);
   mediaElement.addEventListener('canplay',restorePlaybackRate);
   restorePlaybackRate();
-  const loopTrigger=skin.querySelector('.prism-loop-trigger');
-  const openLoopSettings=()=>{
-    if(sceneLoop.getState().active)sceneLoop.stop();
-    else if(sceneLoop.hasChapter())sceneLoop.toggleChapter();
-    else playerPreferences.open('[data-loop-in]');
-  };
-  loopTrigger?.addEventListener('click',openLoopSettings);
   return { player, media:mediaElement,
     getSceneLoopState(){return sceneLoop.getState();},
     setAutoRotateFullscreen(value){autoOrientation.setEnabled(value);},
     getPreferences(){return playerPreferences.getOverrides();},
     isRememberingSettings(){return rememberEnabled;},
     destroy(){
-    loopTrigger?.removeEventListener('click',openLoopSettings);
     sceneLoop.destroy();
     mediaElement.removeEventListener('ratechange',onRateChange);
     mediaElement.removeEventListener('loadedmetadata',restorePlaybackRate);
