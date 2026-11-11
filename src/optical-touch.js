@@ -99,6 +99,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   let entrySignature='';
   let pulseTimer=0;
   let fetchedChapters=[];
+  let muxChapters=[];
   let fetchedCaptions=[];
   let destroyed=false;
   const abortTracks=new AbortController();
@@ -248,7 +249,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
       : [];
     const resolved=resolveIndex({
       configured:chapters,
-      tracked:nativeChapters.length?nativeChapters:fetchedChapters,
+      tracked:nativeChapters.length?nativeChapters:fetchedChapters.length?fetchedChapters:muxChapters,
       derived,duration:duration(),mode:chapterMode
     });
     const signature=JSON.stringify([resolved.type,resolved.entries]);
@@ -280,6 +281,20 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
           refreshIndex();
         }).catch(()=>{/* native tracks may still load */});
     }
+  }
+  // Optional AI-authoritative chapters, attached to Mux by Robots Directives.
+  // A same-origin Worker endpoint securely reads only public chapter metadata.
+  // If Mux AI is not configured, transcript/time navigation still works.
+  if(chapterMode==='smart' && muxPlaybackId && /^[A-Za-z0-9]+$/.test(muxPlaybackId)){
+    const url=new URL('/api/mux/chapters',location.origin);
+    url.searchParams.set('playback_id',muxPlaybackId);
+    fetch(url,{signal:abortTracks.signal})
+      .then(response=>response.ok?response.json():null)
+      .then(body=>{
+        if(destroyed || !body?.chapters?.length)return;
+        muxChapters=normalizeChapters(body.chapters);
+        refreshIndex();
+      }).catch(()=>{/* Verified timestamp fallback remains available. */});
   }
   // In smart mode, subtitle timestamps can identify useful dialogue beats
   // without claiming AI scene recognition or fabricating authored chapters.
