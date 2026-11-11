@@ -112,6 +112,33 @@ async def check(browser_type, name, url, reportdir):
         outcomes['reduced_motion']=True
         assert not errors,f'Page JS errors: {errors}'
         outcomes['runtime_errors']=0
+        # The default showcase uses mux-video rather than a native video tag.
+        # Check its independent WebVTT path instead of assuming the reusable
+        # native-video fixture proves the production captions work.
+        await page.goto(url+'/',wait_until='domcontentloaded',timeout=25000)
+        await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
+        mux=page.locator('#prism-mount mux-video.prism-media')
+        await mux.wait_for(timeout=12000)
+        mux_trigger=page.locator('#prism-mount .prism-captions-trigger')
+        await mux_trigger.evaluate('(button)=>button.click()')
+        await page.wait_for_function('document.querySelector("#prism-mount .prism-captions-menu")?.hasAttribute("data-open")',timeout=10000)
+        mux_radio=page.locator('#prism-mount .prism-captions-menu media-captions-radio-group media-menu-radio-item').last
+        await mux_radio.wait_for(state='visible',timeout=10000)
+        await mux_radio.click()
+        try:
+            await page.wait_for_function('''() => {
+                const media=document.querySelector('#prism-mount mux-video.prism-media');
+                return [...(media?.textTracks||[])].some(t=>t.kind==='captions' && t.mode==='showing' && t.cues?.length>0);
+            }''',timeout=12000)
+        finally:
+            info=await mux.evaluate('''m=>({
+                tracks:[...(m.textTracks||[])].map(t=>({kind:t.kind,mode:t.mode,cues:t.cues?.length||0,active:t.activeCues?.length||0})),
+                elements:[...m.querySelectorAll('track')].map(t=>({kind:t.kind,src:t.src,readyState:t.readyState,trackMode:t.track?.mode,cues:t.track?.cues?.length||0})),
+                innerTracks:m.shadowRoot?[...m.shadowRoot.querySelectorAll('video track')].map(t=>({kind:t.kind,src:t.src,readyState:t.readyState})):[],
+                readyState:m.readyState,networkState:m.networkState,error:m.error?.message||null
+            })''')
+            outcomes['showcase_mux_caption_diagnostics']=info
+            print('MUX_CAPTION_DIAGNOSTICS',json.dumps(info))
     except Exception as e:
         outcomes['FAILURE']=str(e)
         try:await page.screenshot(path=str(reportdir/f'release-{name}-failure.png'),full_page=True)
