@@ -102,6 +102,23 @@ async def check(browser_type, name, url, reportdir):
         player_time=await page.locator('#player-a video.prism-media').evaluate('v=>v.currentTime')
         assert abs(player_time-original_time)<.35, 'Preview accidentally sought main media'
         outcomes['true_liveframe_preview_without_playback_interference']=True
+        # Keep showing the previously decoded image while an async seek is pending.
+        # Previously mousemove set data-frame-ready=false, hiding the whole
+        # loupe until the slow remote decoder finally completed its seek.
+        await page.locator('#player-a .prism-rail').evaluate('''rail=>{
+            const rect=rail.getBoundingClientRect();
+            for(const fraction of [.15,.82,.38,.93]){
+                rail.dispatchEvent(new PointerEvent('pointermove',{
+                    bubbles:true,pointerType:'mouse',clientX:rect.left+rect.width*fraction,
+                    clientY:rect.top+rect.height/2
+                }));
+                const preview=document.querySelector('#player-a video.prism-loupe-liveframe');
+                if(preview?.dataset.frameReady!=='true'){
+                    throw Error('Optical Loupe hid its last real frame during rapid hover');
+                }
+            }
+        }''')
+        outcomes['rapid_hover_never_blanks_a_decoded_frame']=True
         # Rapid mouse jumps must resolve to the LAST hovered timestamp rather
         # than a stale frame or the beginning of the current chapter. The
         # separate preview decoder may need time for the final seek, but mouse

@@ -19,7 +19,7 @@ const flags=Object.fromEntries(process.argv.slice(2).filter(a=>a.startsWith('--'
 if(!flags.input)throw new Error('Specify --input=/path/to/full-film.mp4');
 const input=path.resolve(flags.input);
 const output=path.resolve(flags.output||path.join(root,'assets'));
-const interval=8; // 8-second previews; ~90 real frames across the full movie.
+const interval=2; // Same two-second preview cadence as the Cinematic Reel (~367 frames).
 const tileWidth=160,tileHeight=90,columns=10;
 const jpeg='tears-of-steel-full-storyboard.jpg';
 const vtt='tears-of-steel-full-storyboard.vtt';

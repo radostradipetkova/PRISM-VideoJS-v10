@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/prepare-liveaction-storyboard.yml
+      - scripts/generate-liveaction-storyboard.mjs
 
 permissions:
   contents: write

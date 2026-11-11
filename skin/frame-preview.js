@@ -297,9 +297,9 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       show(time){
         if(disposed || !Number.isFinite(time))return;
         requested=Math.max(0,time);
-        // Never show the frame from the beginning of the previous chapter
-        // while the decoder catches up to the current pointer position.
-        if(!frameMatchesPointer())preview.dataset.frameReady='false';
+        // Keep the last successfully decoded real frame visible while seeking.
+        // Clearing frameReady here blanked the loupe on every fast mousemove.
+        // Update to the newest requested frame as soon as the decoder catches up.
         scheduleSeek();
       },
       showChapter,
@@ -324,23 +324,41 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
   preview.setAttribute('aria-hidden','true');
   housing.append(preview);
   let displayed=null;
-  preview.addEventListener('load',()=>{
-    if(disposed)return;
-    preview.dataset.frameReady='true';
-    displayed=preview.src;
-  });
-  preview.addEventListener('error',()=>{preview.dataset.frameReady='false';});
+  let pendingUrl=null;
+  let pendingImage=null;
+  // Hold the last loaded thumbnail in the DOM while the next Mux image loads.
+  // Replacing the visible <img> src first caused gray flashes on rapid hover.
   const paint=()=>{
     if(disposed || requested===null)return;
     // Native sprite/VTT previews are more precise and should take priority.
-    if(!nativeThumb.hasAttribute('data-hidden')){
-      preview.dataset.frameReady='false';
-      return;
-    }
+    if(!nativeThumb.hasAttribute('data-hidden'))return;
     const time=muxThumbnailSample(requested,Number(media.duration));
     const url=`https://image.mux.com/${muxPlaybackId}/thumbnail.webp?width=240&time=${time}`;
-    if(preview.src!==url){preview.dataset.frameReady='false';preview.src=url;}
-    else if(displayed===url)preview.dataset.frameReady='true';
+    if(displayed===url || pendingUrl===url)return;
+    // An image from a previous seek is never allowed to replace a newer one.
+    pendingImage?.removeAttribute('src');
+    pendingUrl=url;
+    const next=new Image();
+    pendingImage=next;
+    next.className='prism-loupe-liveframe prism-loupe-muxframe';
+    next.alt='';
+    next.setAttribute('aria-hidden','true');
+    next.addEventListener('load',()=>{
+      if(disposed || pendingImage!==next || pendingUrl!==url)return;
+      next.dataset.frameReady='true';
+      housing.append(next);
+      preview.remove();
+      preview=next;
+      displayed=url;
+      pendingImage=null;
+      pendingUrl=null;
+    },{once:true});
+    next.addEventListener('error',()=>{
+      if(pendingImage!==next)return;
+      pendingImage=null;
+      pendingUrl=null;
+    },{once:true});
+    next.src=url;
   };
   return {
     show(time){
@@ -349,6 +367,11 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       clear();timer=setTimeout(paint,32);
     },
     showChapter,
-    destroy(){disposed=true;clear();destroyIris();preview.removeAttribute('src');preview.remove();}
+    destroy(){
+      disposed=true;clear();destroyIris();
+      pendingImage?.removeAttribute('src');
+      pendingImage=null;
+      preview.removeAttribute('src');preview.remove();
+    }
   };
 }
