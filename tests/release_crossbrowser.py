@@ -66,6 +66,28 @@ async def check(browser_type, name, url, reportdir):
         tracks=await page.locator('#player-b video.prism-media').evaluate("v=>[...v.textTracks].map(t=>({kind:t.kind,language:t.language,cues:t.cues?.length||0}))")
         assert any(t['kind']=='captions' for t in tracks),f'Caption tracks missing: {tracks}'
         outcomes['caption_track_detected']=tracks
+        # Real subtitles check: activating English must load WebVTT cues and
+        # actually place the matching TextTrack in showing mode. A populated
+        # caption menu alone is not sufficient.
+        caption_trigger=page.locator('#player-b .prism-captions-trigger')
+        await caption_trigger.evaluate('(button)=>button.click()')
+        await page.wait_for_function('document.querySelector("#player-b .prism-captions-menu")?.hasAttribute("data-open")',timeout=10000)
+        caption_menu=page.locator('#player-b .prism-captions-menu')
+        caption_radio=caption_menu.locator('media-captions-radio-group media-menu-radio-item').last
+        await caption_radio.wait_for(state='visible',timeout=10000)
+        await caption_radio.click()
+        await page.wait_for_function('''() => {
+            const media=document.querySelector('#player-b video.prism-media');
+            const captions=[...media.textTracks].find(t=>t.kind==='captions');
+            return captions?.mode==='showing' && captions.cues?.length>0;
+        }''',timeout=12000)
+        await page.locator('#player-b video.prism-media').evaluate('v=>{v.pause();v.currentTime=1.5;}')
+        await page.wait_for_function('''() => {
+            const media=document.querySelector('#player-b video.prism-media');
+            const captions=[...media.textTracks].find(t=>t.kind==='captions');
+            return captions?.mode==='showing' && (captions.activeCues?.length||0)>0;
+        }''',timeout=12000)
+        outcomes['captions_selected_showing_and_active'] = await page.locator('#player-b video.prism-media').evaluate('''v=>[...v.textTracks].map(t=>({kind:t.kind,mode:t.mode,cues:t.cues?.length||0,active:t.activeCues?.length||0}))''')
         await page.locator('#player-b .prism-explore-launch').wait_for(state='visible',timeout=20000)
         await page.locator('#player-b .prism-explore-launch').click()
         dialog=page.locator('#player-b .prism-chapter-dialog')
