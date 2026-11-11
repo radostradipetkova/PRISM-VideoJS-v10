@@ -64,3 +64,15 @@ test('caption settings uses a toothed cog in the top-left and leaves the title c
   assert.ok(css.includes('.prism-caption-gear{box-sizing:border-box;grid-column:1;grid-row:1;'));
  }
 });
+
+test('Mux caption controller reads real internal WebVTT tracks, not inert light DOM track state',async()=>{
+ for(const where of ['src','skin']){
+  const code=await read(where+'/prism-player.js');
+  assert.ok(code.includes('mediaElement?.shadowRoot?.querySelector(\'video track[kind="captions"]\')'));
+  assert.ok(code.includes('mediaElement?.textTracks'));
+  assert.ok(code.includes("captionTrackList?.addEventListener?.('addtrack',initializeDefaultCaptions)"));
+  assert.ok(code.includes("for(const track of tracks)track.mode=track===chosen?'showing':'disabled'"));
+  assert.ok(code.includes("for(const track of tracks)track.mode=track===preferred?'showing':'disabled'"));
+  assert.ok(code.includes("captionStatus.textContent='Subtitle track could not load. Check the VTT file.'"));
+ }
+});
