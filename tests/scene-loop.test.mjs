@@ -12,7 +12,8 @@ class ElementStub extends EventTarget {
 function fixture({duration=70,entries=[],ranges=null,readyState=3}={}){
   const names=['[data-loop-chapter]','[data-loop-in]','[data-loop-out]','[data-loop-ab]','[data-loop-off]','[data-loop-status]','[data-loop-context]','[data-loop-range]'];
   const elements=new Map(names.map(n=>[n,new ElementStub()]));
-  const group={querySelector:n=>elements.get(n)};
+  const group=new ElementStub();
+  group.querySelector=n=>elements.get(n);
   const dock=new ElementStub();
   const skin=new ElementStub();
   skin.querySelector=n=>n==='[data-loop-panel]'?group:n==='.prism-loop-trigger'?dock:null;
