@@ -1,5 +1,4 @@
-# PRISM dedicated GitHub-connected Cloudflare Worker.
-# This is intentionally separate from orange-grass-f8a7.
+# PRISM GitHub-connected Worker. Separate from the existing orange-grass-f8a7 site.
 name = "prism-videojs-v10"
 compatibility_date = "2026-11-11"
 

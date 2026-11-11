@@ -1,0 +1,24 @@
+{
+  "name": "prism-videojs-v10",
+  "version": "2.3.1",
+  "private": true,
+  "type": "module",
+  "description": "PRISM — a reusable, editorial Video.js v10 HTML skin and showcase",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node scripts/run-browser-test.mjs",
+    "test:browser:mux": "node scripts/run-browser-test.mjs",
+    "audit:static": "node scripts/predeploy-audit.mjs",
+    "build:skin": "node scripts/package-skin.mjs",
+    "test:skin": "node --test tests/reusable-skin.test.mjs",
+    "prepare:film": "node scripts/prepare-film.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.158.0"
+  },
+  "optionalDependencies": {
+    "ffmpeg-static": "^5.2.0"
+  }
+}

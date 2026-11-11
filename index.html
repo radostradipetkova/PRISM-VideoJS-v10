@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eae7df"><meta name="description" content="PRISM — an editorial, precision-first custom Video.js v10 skin. An interface for the art of watching.">
+  <title>PRISM — An interface for the art of watching</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/mark.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/global.css">
+  <link rel="stylesheet" href="./src/styles.css">
+  <!-- First-paint guard: only JS-enabled, motion-capable sessions conceal
+       the hero until the lightweight local typography module initializes.
+       A fail-safe releases it even if the app's modules fail to load. -->
+  <script>
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('type-booting');
+      setTimeout(() => document.documentElement.classList.remove('type-booting'), 2000);
+    }
+  </script>
+  <!-- Official Video.js 10.3.0 HTML bundle. Includes the actual player and skin UI primitives. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/video.js"></script>
+  <!-- Components outside the default bundled skin are explicitly registered. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-preview.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-value.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-thumbnail.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/thumbnail.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/seek-button.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/gesture.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/playback-rate-radio-group.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/captions-radio-group.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/status-announcer.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/menu-radio-item.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/menu-item-indicator.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/media/mux-video.js"></script>
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <a id="skip-to-prism" class="prism-skip-to-player" href="#player-wrap">SKIP TO VIDEO PLAYER</a>
+  <div class="site-shell" id="top">
+    <header class="site-header">
+      <a class="site-logo" href="#top" aria-label="PRISM Home"><span class="brand-glyph" aria-hidden="true"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span><span>PRISM<span class="logo-period">.</span></span></a>
+      <nav aria-label="Main navigation" class="main-navigation"><a href="#experience">EXPERIENCE</a><a href="#anatomy">ANATOMY</a></nav>
+      <span class="head-edition">VIDEO.JS 10.3.0 <span aria-hidden="true">↗</span></span>
+    </header>
+    <main>
+      <section class="hero" id="experience">
+        <div class="hero-heading-area">
+          <div class="eyebrow hero-eyebrow"><span class="slit"></span> THE NEXT GENERATION OF WATCHING <span class="fine-no">001 / 026</span></div>
+          <h1>THE ART<br>OF <em>WATCHING.</em></h1>
+          <div class="hero-subline"><span class="hero-swoosh" aria-hidden="true"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span><p>A video player stripped back to what matters.<br>Four moving worlds. One interface built for the image.</p><span class="hero-subindex">A BETTER<br>WAY TO SEE.</span></div>
+        </div>
+        <div class="player-region">
+          <div class="region-meta"><span>01 — THE EXPERIENCE</span><span>INTERACTIVE / LIVE PLAYER</span></div>
+          <div class="player-size-stage"><div class="player-wrap" id="player-wrap"><div id="prism-mount" class="prism-mount" aria-label="PRISM player demonstration"></div></div></div>
+          <div class="chapter-bar" role="group" aria-label="Jump to a scene in the cinematic showcase">
+            <span class="chapter-bar-caption">EXPLORE THE FILM</span>
+            <button type="button" data-chapter="0" aria-current="true"><span>01</span> NIGHT CITY <small>00:00</small></button>
+            <button type="button" data-chapter="1" aria-current="false"><span>02</span> SUNRISE <small>00:08</small></button>
+            <button type="button" data-chapter="2" aria-current="false"><span>03</span> LIQUID <small>00:16</small></button>
+            <button type="button" data-chapter="3" aria-current="false"><span>04</span> GOLDEN HOUR <small>00:24</small></button>
+          </div>
+          <div class="prism-demo-strip" role="group" aria-label="Select demonstration footage">
+            <span class="prism-demo-label">VIEW /</span>
+            <div class="prism-demo-options">
+              <button type="button" class="selected" data-film="cinematic" aria-pressed="true">CINEMATIC REEL</button>
+              <button type="button" data-film="night" aria-pressed="false">NIGHT</button>
+              <button type="button" data-film="coast" aria-pressed="false">DAYLIGHT</button>
+              <button type="button" data-film="liveaction" aria-pressed="false">LIVE ACTION</button>
+            </div>
+            <span class="prism-demo-hint">FOUR FILMS · ONE SKIN</span>
+          </div>
+          <p id="prism-film-credit" class="prism-film-credit" hidden>
+            <span id="prism-film-cut-status">OPEN FILM / COMPLETE STREAM</span>
+            <span>“Tears of Steel” © Blender Foundation / Blender Institute. Optional 65-second excerpt from 04:50–05:55, adapted under
+              <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a>.
+              <a href="https://mango.blender.org/about/" target="_blank" rel="noopener noreferrer">Original film and credits</a>.
+            </span>
+          </p>
+          <div class="player-footer"><span><span class="small-square"></span> A PLAYER WITH CHARACTER. NOT DISTRACTION.</span><span>VIDEO.JS / V10 <span aria-hidden="true">↗</span></span></div>
+          <div class="prism-keyboard-aid" role="group" aria-label="Keyboard navigation for the video player">
+            <button type="button" id="focus-prism-player" class="prism-keyboard-focus-button" aria-controls="prism-mount" aria-describedby="prism-keyboard-help">FOCUS PLAYER FOR ALL SHORTCUTS <span aria-hidden="true">↗</span></button>
+            <div class="prism-keyboard-copy">
+              <p id="prism-keyboard-help">SPACE <span>PLAY / PAUSE ANYWHERE</span> &nbsp; K <span>PLAY (FOCUSED)</span> &nbsp; ← / → <span>SEEK</span> &nbsp; ↑ / ↓ <span>VOLUME</span> &nbsp; M <span>MUTE</span> &nbsp; F <span>FULLSCREEN</span> &nbsp; ESC <span>CLOSE MENU</span></p>
+              <small id="prism-keyboard-state">SPACE: PLAY / PAUSE ANYWHERE · FOCUS FOR MORE</small>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="feature-intro" id="anatomy"><div class="section-index">02 / THE ANATOMY</div><div class="feature-title"><h2>NOT JUST<br>ANOTHER <em>BAR.</em></h2><p>What if the interface felt like a precision instrument? Familiar where it needs to be. Unmistakable where it counts.</p></div></section>
+      <section class="feature-grid" aria-label="PRISM signature features — interactive demonstrations">
+        <article class="feature-card rail-card">
+          <div class="feature-card-head"><span>01 / THE RAIL</span><span>— SIGNATURE ELEMENT</span></div>
+          <div class="illustration-rail">
+            <div class="feature-demo-instruction"><span class="feature-live-dot" aria-hidden="true"></span> DRAG TO SEEK <span aria-hidden="true">↔</span></div>
+            <div class="rail-mini-line" style="--demo-progress:0%">
+              <div class="rail-mini-fill" aria-hidden="true"></div>
+              <div class="rail-mini-diamond" aria-hidden="true"></div>
+              <input class="rail-mini-input" id="rail-demo-range" type="range" min="0" max="18" step="0.05" value="0" disabled aria-label="Seek in the actual PRISM video" aria-describedby="rail-demo-hint" aria-valuetext="Waiting for video">
+            </div>
+            <div class="rail-mini-readouts"><output id="rail-demo-current" for="rail-demo-range">--:--</output><span id="rail-demo-duration">--:--</span></div>
+            <p class="feature-demo-feedback" id="rail-demo-hint" role="status" aria-live="polite">CONNECTING TO THE LIVE VIDEO</p>
+          </div>
+          <div class="feature-card-bottom"><h3>Precision,<br>in motion.</h3><p>Move the diamond to seek the actual video. Watch the time update, or use the arrow keys for five-second steps.</p></div>
+        </article>
+        <article class="feature-card aperture-card">
+          <div class="feature-card-head"><span>02 / THE APERTURE</span><span>— VISUAL LANGUAGE</span></div>
+          <div class="aperture-figure">
+            <button type="button" class="aperture-ring aperture-toggle" aria-label="Play video" aria-pressed="false" aria-describedby="aperture-demo-state">
+              <svg class="aperture-symbol" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><path class="aperture-play-icon" d="M15 10 L31 20 L15 30 Z"/><g class="aperture-pause-icon"><rect x="13" y="10" width="5" height="20"/><rect x="23" y="10" width="5" height="20"/></g></svg>
+            </button>
+            <span class="aperture-cross" aria-hidden="true">+</span>
+            <p class="aperture-demo-state" id="aperture-demo-state" role="status" aria-live="polite">PRESS TO PLAY THE LIVE VIDEO</p>
+          </div>
+          <div class="feature-card-bottom"><h3>Let the<br>image breathe.</h3><p>One deliberate gesture. Press the aperture to play or pause the real film, with feedback that follows playback.</p></div>
+        </article>
+        <article class="feature-card access-card" tabindex="0" aria-label="Keyboard shortcuts demonstration for the live PRISM video">
+          <div class="feature-card-head"><span>03 / ACCESSIBILITY</span><span>— NOT AN ADD-ON</span></div>
+          <div class="access-figure">
+            <p class="access-demo-instruction">CLICK THE KEYS / OR TYPE WHILE THIS CARD IS FOCUSED</p>
+            <div class="access-keys" role="group" aria-label="Video shortcut actions">
+              <button class="key" type="button" data-demo-key="back" aria-label="Seek backward five seconds">←</button>
+              <button class="key key-long" type="button" data-demo-key="toggle" aria-label="Play or pause the video">SPACE</button>
+              <button class="key" type="button" data-demo-key="forward" aria-label="Seek forward five seconds">→</button>
+            </div>
+            <p class="access-demo-feedback" role="status" aria-live="polite">READY / YOUR MOVE</p>
+          </div>
+          <div class="feature-card-bottom"><h3>Everyone<br>is invited.</h3><p>Use real keys or click them here. Seeking and playback stay synchronized with the video above.</p></div>
+        </article>
+      </section>
+    </main><footer class="site-footer"><a class="site-logo" href="#top"><span class="brand-glyph"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span> PRISM.</a><div><span>EVERY FRAME DESERVES A BETTER INTERFACE.</span><span>© 2026 / DESIGN CHALLENGE ENTRY</span></div></footer>
+  </div>
+</body></html>

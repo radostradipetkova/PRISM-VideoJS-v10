@@ -6,11 +6,11 @@ node_modules/
 .dev.vars
 .dev.vars.*
 
-# Generated deployment packages
+# Generated deployment packages (Cloudflare builds these from source)
 dist/
 skin-dist/
 
-# Local QA output and temporary fixtures
+# Local QA output, screenshots, temporary fixtures
 screenshots/
 fixtures/
 __pycache__/
@@ -19,7 +19,7 @@ __pycache__/
 *.zip
 *.bak
 
-# Editor and OS files
+# Editor and OS noise
 .vscode/
 .idea/
 .DS_Store

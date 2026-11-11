@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eae7df"><meta name="description" content="PRISM — an editorial, precision-first custom Video.js v10 skin. An interface for the art of watching.">
+  <title>PRISM — Real Speech Caption Audit</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/mark.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/global.css">
+  <link rel="stylesheet" href="./src/styles.css">
+  <!-- First-paint guard: only JS-enabled, motion-capable sessions conceal
+       the hero until the lightweight local typography module initializes.
+       A fail-safe releases it even if the app's modules fail to load. -->
+  <script>
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('type-booting');
+      setTimeout(() => document.documentElement.classList.remove('type-booting'), 2000);
+    }
+  </script>
+  <!-- Official Video.js 10.3.0 HTML bundle. Includes the actual player and skin UI primitives. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/video.js"></script>
+  <!-- Components outside the default bundled skin are explicitly registered. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-preview.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-value.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-thumbnail.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/thumbnail.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/seek-button.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/gesture.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/playback-rate-radio-group.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/captions-radio-group.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/status-announcer.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/menu-radio-item.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/menu-item-indicator.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/media/mux-video.js"></script>
+
+</head>
+
+<body style="min-height:100vh;background:#eae7df;color:#1c211e">
+<main style="max-width:1140px;margin:0 auto;padding:clamp(16px,4vw,54px)">
+  <div style="font-family:monospace;letter-spacing:.2em;font-size:12px;color:#a44e30">PRISM / ACCESSIBILITY LAB</div>
+  <h1 style="font-size:clamp(30px,6vw,64px);margin:12px 0">Real Speech / Caption Test</h1>
+  <p style="font:16px/1.65 Arial,sans-serif;max-width:75ch">A W3C video featuring spoken narration, with its own timed captions converted from W3C's authored subtitle file. This page uses PRISM's <strong>real Video.js v10 skin</strong>. It is a test fixture, not a new design or the competition entry.</p>
+  <div id="speech-player" style="max-width:900px;margin:30px 0;background:#101719"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:20px 0">
+    <button id="run-check" type="button" style="border:0;background:#bd5b37;color:white;font-weight:bold;min-height:48px;padding:12px 20px;cursor:pointer">RUN TIMING CHECK</button>
+    <button id="cc-on" type="button" style="border:1px solid #272b27;background:transparent;min-height:48px;padding:12px 20px;cursor:pointer">CAPTIONS ON</button>
+    <button id="cc-off" type="button" style="border:1px solid #272b27;background:transparent;min-height:48px;padding:12px 20px;cursor:pointer">CAPTIONS OFF</button>
+  </div>
+  <p id="status" role="status" style="font:15px/1.5 monospace">Initializing…</p>
+  <pre id="results" style="font:13px/1.7 ui-monospace,monospace;white-space:pre-wrap;background:#232623;color:#f8e8d8;padding:20px;max-height:450px;overflow:auto">Awaiting test.</pre>
+  <p style="font:13px/1.55 Arial,sans-serif;max-width:75ch"><strong>Manual visual/listening check:</strong> Press Play with captions on, listen to the narration and confirm the words shown match the speech. Then seek around 15s and 24s. Also open PRISM's own subtitle menu and turn subtitles off/on. A passing automated cue test cannot prove font positioning or lip-sync perception by itself.</p>
+  <p style="font:12px/1.4 monospace">Speech video &amp; subtitle authors: <a href="https://www.w3.org/WAI/perspective-videos/captions/" target="_blank" rel="noopener">W3C WAI Perspectives — Video Captions</a>. Internet access is required to load the public video. Captions are a local WebVTT file.</p>
+</main>
+<script type="module">
+import {mountPrismPlayer} from './src/prism-player.js';
+const status=document.querySelector('#status');
+const results=document.querySelector('#results');
+const src='https://media.w3.org/wai/perspective-videos/video-captions.mp4';
+const mount=document.querySelector('#speech-player');
+const player=mountPrismPlayer(mount,{src,poster:'./assets/prism-cinematic.jpg',captions:'./speech-captions.vtt',title:'W3C Real Speech Caption Test',eyebrow:'TEST / SPOKEN NARRATION',chapterMode:'none'});
+const media=player.media;
+let track;
+function captions(){track=Array.from(media.textTracks||[]).find(t=>t.kind==='captions'||t.kind==='subtitles');return track;}
+function setCaptions(mode){const t=captions();if(t){t.mode=mode;status.textContent='Caption track: '+t.mode;} else status.textContent='No loaded caption track';}
+document.querySelector('#cc-on').addEventListener('click',()=>setCaptions('showing'));
+document.querySelector('#cc-off').addEventListener('click',()=>setCaptions('disabled'));
+const checks=[
+ {time:5.0,expected:'Video isn\'t just about pictures'},
+ {time:6.6,expected:'also about sound'},
+ {time:15.0,expected:'Frustrating'},
+ {time:20.0,expected:'situation for everyone'},
+ {time:23.0,expected:'Captions make videos accessible'},
+ {time:31.0,expected:'very, very quiet'},
+ {time:37.0,expected:'Essential for some'}
+];
+const wait=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
+function eventOrTimeout(target,event,ms){return new Promise((resolve,reject)=>{let timer;function ok(){clearTimeout(timer);target.removeEventListener(event,ok);resolve();}timer=setTimeout(()=>{target.removeEventListener(event,ok);reject(new Error(event+' timed out'));},ms);target.addEventListener(event,ok,{once:true});});}
+document.querySelector('#run-check').addEventListener('click',async()=>{
+ const btn=document.querySelector('#run-check');btn.disabled=true;results.textContent='';
+ try{
+   if(media.readyState<1)await eventOrTimeout(media,'loadedmetadata',18000);
+   let t=captions();if(!t)throw new Error('No text track found');
+   if(t.mode==='disabled')t.mode='hidden';
+   if(t.readyState===0) await wait(250);
+   const logs=[];
+   for(const check of checks){
+     if(media.readyState<1)break;
+     const pending=eventOrTimeout(media,'seeked',5000);
+     media.currentTime=check.time;
+     await pending;await wait(120);
+     t.mode='showing';
+     const actual=Array.from(t.activeCues||[]).map(c=>c.text).join(' ');
+     const pass=actual.toLowerCase().includes(check.expected.toLowerCase());
+     logs.push(`${pass?'PASS':'FAIL'} @${check.time.toFixed(1)}s — ${actual||'(no active cue)'}`);
+   }
+   const success=logs.filter(l=>l.startsWith('PASS')).length;
+   results.textContent=logs.join('\n')+`\n\nRESULT: ${success}/${checks.length} timed speech cues matched.`;
+   status.textContent=`Timing check completed. ${success}/${checks.length} cues matched. Verify real speech visually and by listening.`;
+ }catch(e){status.textContent='TEST INCOMPLETE: '+e.message;results.textContent='Check video availability. If the video URL is blocked, this test cannot certify PRISM speech-caption playback.';}
+ finally{btn.disabled=false;}
+});
+media.addEventListener('loadedmetadata',()=>{status.textContent=`W3C speech video loaded (${media.duration.toFixed(1)} seconds). Click CAPTIONS ON, then Play.`;});
+media.addEventListener('error',()=>{status.textContent='W3C remote video did not load in this browser/network. Test cannot proceed.';});
+setTimeout(()=>{if(media.readyState<1 && !media.error)status.textContent='Loading the W3C video… An internet connection is required.';},5000);
+</script></body></html>

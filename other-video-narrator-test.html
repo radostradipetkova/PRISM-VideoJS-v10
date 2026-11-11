@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eae7df"><meta name="description" content="PRISM — an editorial, precision-first custom Video.js v10 skin. An interface for the art of watching.">
+  <title>PRISM — Alternative Video / Narrator Verification</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/mark.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/global.css">
+  <link rel="stylesheet" href="./src/styles.css">
+  <!-- First-paint guard: only JS-enabled, motion-capable sessions conceal
+       the hero until the lightweight local typography module initializes.
+       A fail-safe releases it even if the app's modules fail to load. -->
+  <script>
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('type-booting');
+      setTimeout(() => document.documentElement.classList.remove('type-booting'), 2000);
+    }
+  </script>
+  <!-- Official Video.js 10.3.0 HTML bundle. Includes the actual player and skin UI primitives. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/video.js"></script>
+  <!-- Components outside the default bundled skin are explicitly registered. -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-preview.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-value.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/slider-thumbnail.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/thumbnail.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/seek-button.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/gesture.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/playback-rate-radio-group.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/captions-radio-group.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/status-announcer.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/menu-radio-item.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/ui/menu-item-indicator.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/media/mux-video.js"></script>
+  
+</head>
+<body style="min-height:100vh;background:#eae7df;color:#1c211e">
+<main style="max-width:1060px;margin:0 auto;padding:clamp(16px,4vw,54px)">
+  <p style="font:12px/1.4 monospace;color:#a4472a;letter-spacing:.2em">PRISM / UNIVERSAL ACCESSIBILITY TEST</p>
+  <h1 style="font:800 clamp(34px,5vw,58px)/1.05 Arial,sans-serif;margin:14px 0 22px">Different videos.<br>Same accessible player.</h1>
+  <p style="font:16px/1.6 Arial,sans-serif;max-width:74ch">This is a <strong>temporary test page</strong> that mounts PRISM's <strong>actual Video.js v10 skin</strong> with different sources. It does not change your competition showcase. Switch videos, use Narrator, and check that controls, labels, chapters and captions adapt.</p>
+  <div role="group" aria-label="Choose a different example video" style="display:flex;flex-wrap:wrap;gap:10px;margin:20px 0">
+    <button class="fixture" type="button" data-mode="portrait" aria-pressed="true">1 · Portrait with spoken audio + 3 chapters</button>
+    <button class="fixture" type="button" data-mode="none" aria-pressed="false">2 · Same video, no chapters or captions</button>
+    <button class="fixture" type="button" data-mode="w3c" aria-pressed="false">3 · Human speech (W3C, online)</button>
+  </div>
+  <p id="current-mode" role="status" aria-live="polite" style="font:15px/1.6 Arial,sans-serif">Selected: portrait spoken video, 3 chapters, captions.</p>
+  <div class="player-region" style="margin:18px 0">
+    <div class="player-size-stage"><div class="player-wrap" style="max-width:850px;--preferred-width:850px"><div id="narrator-test-player" class="prism-mount"></div></div></div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0">
+    <button id="run-a11y" type="button">RUN SOURCE + ACCESSIBILITY CHECKS</button>
+    <button id="focus-player" type="button">FOCUS PLAYER (FOR NARRATOR)</button>
+  </div>
+  <p id="check-summary" role="status" aria-live="polite" style="font:14px/1.5 monospace">Choose a source to test.</p>
+  <pre id="check-results" style="background:#222725;color:#f5e8d9;max-height:380px;overflow:auto;padding:16px;white-space:pre-wrap;font:13px/1.7 monospace">Waiting for checks.</pre>
+  <section style="font:15px/1.65 Arial,sans-serif;margin-top:30px">
+    <h2 style="font-size:24px">What to listen for using Windows Narrator</h2>
+    <ol>
+      <li>Use <strong>Windows + Ctrl + Enter</strong> to enable Narrator, then <strong>Tab</strong> into the player.</li>
+      <li>In test 1, Narrator should identify the portrait video and its Play/Pause, timeline, volume, speed, captions and <strong>EXPLORE</strong> controls. EXPLORE should show three named chapters.</li>
+      <li>In test 2, EXPLORE and the captions button should <strong>disappear</strong>; Play, Seek, Volume and Fullscreen must remain usable.</li>
+      <li>In test 3, another creator's real spoken video should play with an English caption track. This clip requires an internet connection.</li>
+      <li>Press <strong>Escape</strong> inside the Optical Index and confirm focus returns to EXPLORE. Use <strong>Windows + Ctrl + Enter</strong> to turn Narrator off.</li>
+    </ol>
+    <p><strong>Important:</strong> The automated source check inspects DOM/media states, not actual Narrator speech. Passing it alone does not certify screen-reader announcements.</p>
+    <p>Sample 1 is an <em>original synthetic voice and moving portrait test pattern</em>; Sample 3 is W3C's genuine human-spoken accessibility video with its authored WebVTT captions. This test page is not for competition submission.</p>
+    <p>Human-spoken video credit: <a href="https://www.w3.org/WAI/perspective-videos/captions/" target="_blank" rel="noopener">W3C WAI Perspectives — Video Captions</a>.</p>
+  </section>
+</main>
+<style>
+.fixture, #run-a11y, #focus-player{border:1px solid #544e49;background:#252626;color:#f4e9dd;min-height:48px;padding:12px 16px;cursor:pointer;font:600 13px/1.35 Arial,sans-serif;}
+.fixture[aria-pressed=true],#run-a11y{background:#c3633f;color:white;border-color:#b45630;}
+.fixture:focus-visible,#run-a11y:focus-visible,#focus-player:focus-visible{outline:3px solid #e77d54;outline-offset:3px}
+</style>
+<script type="module">
+import {mountPrismPlayer} from './src/prism-player.js';
+const cfg={
+ portrait:{src:'./narrator-alt-portrait.mp4',poster:'./narrator-alt-poster.jpg',title:'Portrait Narration — New Video',eyebrow:'TEST / INDEPENDENT PORTRAIT',captions:'./narrator-alt-captions.vtt',captionLabel:'English — Portrait Narration',captionLang:'en',chaptersVtt:'./narrator-alt-chapters.vtt',chapterMode:'auto'},
+ none:{src:'./narrator-alt-portrait.mp4',poster:'./narrator-alt-poster.jpg',title:'Portrait Video — No Metadata',eyebrow:'TEST / NO CHAPTERS OR CAPTIONS',captions:null,chapters:[],chapterMode:'none'},
+ w3c:{src:'https://media.w3.org/wai/perspective-videos/video-captions.mp4',poster:'',title:'W3C Human Speech Example',eyebrow:'TEST / REAL HUMAN SPEECH',captions:'./w3c-speech-captions.vtt',captionLabel:'English — W3C Speech',captionLang:'en',chapterMode:'none'}
+};
+const root=document.querySelector('#narrator-test-player');
+const summary=document.querySelector('#check-summary');
+const details=document.querySelector('#check-results');
+let instance=null,mode='portrait';
+function load(next){
+ mode=next; if(instance) instance.destroy();
+ instance=mountPrismPlayer(root,cfg[mode]);
+ for(const b of document.querySelectorAll('.fixture'))b.setAttribute('aria-pressed',String(b.dataset.mode===mode));
+ document.querySelector('#current-mode').textContent='Selected: '+cfg[mode].title+'. Video source changed; use Tab to review the controls.';
+ summary.textContent='Ready to test: '+cfg[mode].title;details.textContent='Press RUN SOURCE + ACCESSIBILITY CHECKS.';
+}
+for(const b of document.querySelectorAll('.fixture'))b.addEventListener('click',()=>load(b.dataset.mode));
+document.querySelector('#focus-player').addEventListener('click',()=>root.querySelector('media-container')?.focus({preventScroll:true}));
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+async function check(){
+ const results=[];const add=(name,ok,detail='')=>results.push({name,ok,detail});
+ const media=instance?.media;const skin=root.querySelector('.prism-skin');
+ for(let i=0;i<80&&media?.readyState<1&&!media?.error;i++)await sleep(150);
+ add('Video source metadata',!!media&&media.readyState>=1,media?.error?.message||('readyState='+media?.readyState));
+ add('Correct player accessible name',skin?.getAttribute('aria-label')?.includes(cfg[mode].title),skin?.getAttribute('aria-label')||'missing');
+ add('Video.js v10 components registered',!!customElements.get('media-play-button')&&!!customElements.get('media-status-announcer'));
+ add('Accessible screen-reader status region',!!skin?.querySelector('media-status-announcer'));
+ add('Play and seek controls remain present',!!skin?.querySelector('media-play-button')&&!!skin?.querySelector('media-time-slider'));
+ const cc=skin?.querySelector('button[aria-label="Caption track"]');const expectCaption=!!cfg[mode].captions;
+ add('Caption control matches this video',Boolean(cc)===expectCaption);
+ const track=media?.querySelector('track[kind="captions"]');
+ add('Caption label and language adapt',(!expectCaption&&!track)||(expectCaption&&track?.srclang==='en'&&track?.label===cfg[mode].captionLabel));
+ if(expectCaption){if(track?.track){track.track.mode='hidden';for(let i=0;i<35&&!(track.track.cues?.length);i++)await sleep(200);}
+ add('Caption cues actually loaded',!!track?.track?.cues?.length,'cue count '+(track?.track?.cues?.length||0));}
+ if(mode==='portrait'){for(let i=0;i<30&&skin?.querySelector('.prism-explore-launch')?.hidden;i++)await sleep(100);
+ add('Authored chapter navigation available',!skin?.querySelector('.prism-explore-launch')?.hidden);
+ const t=media?.querySelector('track[kind="chapters"]');add('Real chapter track provided',!!t);
+ }else{add('No false chapter navigation',skin?.querySelector('.prism-explore-launch')?.hidden===true);}
+ add('No fatal media error',!media?.error,media?.error?.message||'none');
+ summary.textContent=results.filter(x=>x.ok).length+'/'+results.length+' checks passed (automated DOM/media checks, not Narrator speech).';
+ details.textContent=results.map(r=>(r.ok?'PASS':'FAIL')+' — '+r.name+(r.detail?' ['+r.detail+']':'')).join('\n');
+}
+document.querySelector('#run-a11y').addEventListener('click',check);
+load('portrait');
+</script>
+</body></html>

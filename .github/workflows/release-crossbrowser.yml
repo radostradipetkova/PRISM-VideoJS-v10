@@ -1,0 +1,49 @@
+name: PRISM cross-browser release verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'skin/**'
+      - 'src/**'
+      - 'examples/**'
+      - 'tests/release_crossbrowser.py'
+      - '.github/workflows/release-crossbrowser.yml'
+  pull_request:
+    paths:
+      - 'skin/**'
+      - 'src/**'
+      - 'examples/**'
+      - 'tests/release_crossbrowser.py'
+
+jobs:
+  browser:
+    name: '${{ matrix.browser }} — real Video.js playback'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: python -m pip install playwright==1.57.0
+      - run: python -m playwright install --with-deps ${{ matrix.browser }}
+      - run: npm test
+      - run: npm run build
+      - run: python tests/release_crossbrowser.py --browser ${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: 'prism-release-${{ matrix.browser }}'
+          path: |
+            release-reports/release-${{ matrix.browser }}.json
+            release-reports/release-${{ matrix.browser }}-failure.png
+          if-no-files-found: ignore

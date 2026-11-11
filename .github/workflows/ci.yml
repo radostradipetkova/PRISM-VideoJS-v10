@@ -1,0 +1,23 @@
+name: PRISM release checks
+on:
+  push:
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install media inspection tools
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Test the project
+        run: npm test
+      - name: Assemble public static site
+        run: npm run build
+      - name: Upload the deployable site
+        uses: actions/upload-artifact@v4
+        with:
+          name: prism-static-site
+          path: dist/

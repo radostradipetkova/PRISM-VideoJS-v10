@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PRISM Skin — Independent Website Integration</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/global.css" />
+  <link rel="stylesheet" href="../skin/prism-skin.css" />
+  <style>
+    /* Deliberately NOT the PRISM showcase styles: proves skin has no page dependencies. */
+    :root { font-family: system-ui, sans-serif; color-scheme:light }
+    body { margin:0; background:#f8f6f2; color:#263135; }
+    .layout { width:min(94%, 1110px); margin:40px auto 100px; }
+    h1 { font-size:clamp(2.4rem,6vw,5rem); line-height:1; letter-spacing:-.065em; }
+    p {line-height:1.6; max-width:65ch}
+    .grid {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+    .panel {min-width:0;background:#fff;border:1px solid #ccd5d8;padding:16px;border-radius:20px}
+    .panel h2 {font-size:1rem;margin:10px 0 14px}
+    .player-slot {width:100%; min-width:0;}
+    .error {color:#b62323;font-weight:bold}
+    .layout button:not(.prism-mount button) {border-radius:8px;padding:10px 15px;}
+    @media(max-width:780px){.grid{grid-template-columns:1fr}.layout{margin-top:20px}}
+  </style>
+</head>
+<body>
+<main class="layout">
+  <p>INDEPENDENT IMPLEMENTATION DEMO / VIDEO.JS 10.3.0</p>
+  <h1>One skin.<br>Different footage.</h1>
+  <p>Two independent PRISM players use different videos and chapter/caption data. The page has its own visual identity and loads only PRISM's player stylesheet.</p>
+  <div class="grid">
+    <section class="panel"><h2>Wide footage — custom indigo accents</h2><div id="player-a" class="player-slot" style="--media-accent-color:#638cff;--media-accent-text-color:#111c31;--media-border-color:#637cba;--media-border-radius:18px;--media-font-family:system-ui,sans-serif;--media-scale-unit:16px"></div><p>Local MP4, no chapters, no captions: unnecessary menus stay absent.</p></section>
+    <section class="panel"><h2>Portrait footage — custom gold accents</h2><div id="player-b" class="player-slot" style="--media-accent-color:#ffc176;--media-accent-text-color:#21150b;--media-border-color:#d4a868;--media-border-radius:18px;--media-font-family:system-ui,sans-serif;--media-object-fit:contain;--media-object-position:center;--media-scale-unit:16px"></div><p>Independent portrait film with real spoken captions and three chapters. Nothing is cropped.</p></section>
+  </div>
+  <p class="error" id="message" role="alert" hidden></p>
+</main>
+<script type="module">
+  import {registerVideoJS} from '../skin/register-videojs.js';
+  import {mountPrismPlayer} from '../skin/index.js';
+  try {
+    await registerVideoJS();
+    const a=mountPrismPlayer(document.querySelector('#player-a'), {
+      src:'../assets/night-city.mp4', poster:'../assets/night-city.jpg',
+      title:'After Hours', eyebrow:'NIGHT CITY / REEL', chapters:[], captions:null
+    });
+    const b=mountPrismPlayer(document.querySelector('#player-b'), {
+      src:'./media/narrator-alt-portrait.mp4',poster:'./media/narrator-alt-poster.jpg',
+      title:'Narrated Portrait Film',eyebrow:'PORTRAIT / SPEECH',
+      captions:'./media/narrator-alt-captions.vtt',captionLang:'en',captionLabel:'English captions',
+      chaptersVtt:'./media/narrator-alt-chapters.vtt'
+    });
+    window.PRISM_REUSABLE_DEMO={a,b}; // optional browser console QA
+  } catch (error) {
+    document.querySelector('#message').hidden=false;
+    document.querySelector('#message').textContent=`Video.js failed to initialize: ${error.message}`;
+    console.error(error);
+  }
+</script>
+</body>
+</html>

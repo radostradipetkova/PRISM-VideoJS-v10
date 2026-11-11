@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Embed PRISM</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/global.css">
+<link rel="stylesheet" href="../skin/prism-skin.css">
+<style>body{font:16px/1.5 system-ui;background:#eae7df;padding:5vw}.embedded{max-width:900px;margin:auto}</style>
+</head><body><div class="embedded"><h1>PRISM — standalone skin embed</h1><div id="prism-embed" style="--media-accent-color:#ffc176;--media-accent-text-color:#20150d;--media-object-fit:contain;--media-border-radius:12px"></div></div>
+<script type="module">
+import {registerVideoJS} from '../skin/register-videojs.js';
+import {mountPrismPlayer} from '../skin/index.js';
+await registerVideoJS();
+mountPrismPlayer(document.querySelector('#prism-embed'), {
+ src:'../assets/night-city.mp4',poster:'../assets/night-city.jpg',
+ title:'After Hours',eyebrow:'ARCHIVE / 02',captions:null,chapters:[]
+});
+</script></body></html>
