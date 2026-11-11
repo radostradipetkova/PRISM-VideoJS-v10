@@ -1599,3 +1599,15 @@
     top:auto;bottom:0;background:linear-gradient(to bottom,transparent,rgba(13,16,18,.95));
   }
 }
+
+/* Very narrow embeds cannot fit six 44px targets in one line.
+   Use a balanced 3-by-2 secondary control grid, never clipped controls. */
+@container (max-width:310px){
+  .prism-skin{height:calc(56.25cqw + 238px)}
+  .prism-skin .prism-group-right{
+    display:grid;grid-template-columns:repeat(3,minmax(44px,1fr));
+    justify-items:center;column-gap:4px;row-gap:5px;
+    min-height:96px;
+  }
+  .prism-skin .prism-group-right .prism-control{justify-self:center}
+}

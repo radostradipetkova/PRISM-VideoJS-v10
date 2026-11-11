@@ -199,6 +199,50 @@ async def check(browser_type, name, url, reportdir):
         overflow=await page.evaluate('document.documentElement.scrollWidth>document.documentElement.clientWidth+1')
         assert not overflow,'Mobile viewport scrolls horizontally'
         outcomes['mobile_no_horizontal_overflow']=True
+        # PRISM mobile transport: never squash everything into a single row.
+        # Play/Pause + readable time lead, with remaining controls following
+        # in DOM/Tab order. All targets must fit inside their own dock, even
+        # on 320px phones and narrow reusable embed containers.
+        mobile_layouts={}
+        for viewport in [320,375,440,560]:
+            await page.set_viewport_size({'width':viewport,'height':812})
+            layout=await page.locator('#player-b .prism-skin').evaluate("""skin=>{
+              const box=e=>{const b=e.getBoundingClientRect();
+                return {x:b.x,y:b.y,left:b.left,right:b.right,top:b.top,bottom:b.bottom,
+                        width:b.width,height:b.height};};
+              const take=s=>skin.querySelector(s);
+              const left=take('.prism-group-left'), right=take('.prism-group-right');
+              const play=take('.prism-play'), mute=take('.prism-mute');
+              const fullscreen=take('.prism-fullscreen'), time=take('.prism-time');
+              const rail=take('.prism-rail'), movie=take('.prism-media');
+              const controls=[...skin.querySelectorAll('.prism-control')]
+                .filter(el=>getComputedStyle(el).display!=='none' && el.getBoundingClientRect().width>0)
+                .map(el=>({cls:el.className, ...box(el)}));
+              return {skin:box(skin),movie:box(movie),rail:box(rail),
+                left:box(left),right:box(right),play:box(play),mute:box(mute),
+                fullscreen:box(fullscreen),time:box(time),controls,
+                playerWidth:skin.getBoundingClientRect().width,
+                scrollWidth:document.documentElement.scrollWidth,
+                clientWidth:document.documentElement.clientWidth};
+            }""")
+            assert layout['scrollWidth']<=layout['clientWidth']+1, f'{viewport}px page overflow: {layout}'
+            assert layout['left']['bottom']<=layout['right']['top']+1, f'{viewport}px: transport rows overlap'
+            assert layout['play']['width']>=49 and layout['play']['height']>=49, f'{viewport}px: play priority too small'
+            assert layout['time']['width']>=80, f'{viewport}px: unreadable playback time'
+            assert layout['rail']['width']>=layout['skin']['width']*.85, f'{viewport}px: precision rail reduced'
+            assert layout['right']['bottom']<=layout['skin']['bottom']+2, f'{viewport}px: lower controls escape player'
+            assert layout['movie']['bottom']<=layout['rail']['top']+1 if viewport<=440 else True, f'{viewport}px: mobile deck covers movie'
+            for item in layout['controls']:
+                assert item['width']>=43.5 and item['height']>=43.5, f'{viewport}px: undersized control {item}'
+                assert item['left']>=layout['skin']['left']-2 and item['right']<=layout['skin']['right']+2, f'{viewport}px: control clipped {item}'
+            mobile_layouts[str(viewport)]={
+                'playerWidth':round(layout['playerWidth']),
+                'playWidth':round(layout['play']['width']),
+                'timeWidth':round(layout['time']['width']),
+                'controlCount':len(layout['controls']),
+                'movieUncovered':layout['movie']['bottom']<=layout['rail']['top']+1}
+        outcomes['mobile_transport_hierarchy_and_no_clipping']=mobile_layouts
+        await page.set_viewport_size({'width':375,'height':812})
         # Functional microtype remains readable on the compact player;
         # decorative optics can stay smaller than controls, but never 6px.
         label_sizes=await page.locator('#player-b .prism-skin').evaluate("""skin=>{
