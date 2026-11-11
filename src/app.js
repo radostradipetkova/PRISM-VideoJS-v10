@@ -16,15 +16,21 @@ const mount=document.querySelector('#prism-mount');
 // Full-film storyboard is prepared once by the GitHub asset-generation job.
 // Never claim the remote MP4 has a storyboard until the VTT actually exists.
 const fullFilmStoryboard='./assets/tears-of-steel-full-storyboard.vtt';
-fetch(fullFilmStoryboard,{method:'HEAD',cache:'no-store'}).then(response=>{
-  if(!response.ok)return;
-  // Leave Mux uploads and the prepared 65-second excerpt on their own assets.
-  if(films.liveaction.src.startsWith('https://video.blender.org/'))
+// Both assets must exist. A successful VTT HEAD alone is not proof that the
+// actual frame sprite is deployed (and a 200 HTML fallback is not a storyboard).
+const fullFilmStoryboardProbe=Promise.all([
+ fetch(fullFilmStoryboard,{method:'HEAD',cache:'no-store'}),
+ fetch('./assets/tears-of-steel-full-storyboard.jpg',{method:'HEAD',cache:'no-store'})
+]).then(([vtt,sprite])=>{
+  const valid= [vtt,sprite].every(response=>response.ok &&
+    !(response.headers.get('content-type')||'').toLowerCase().includes('text/html'));
+  if(valid && films.liveaction.src.startsWith('https://video.blender.org/'))
     films.liveaction.storyboard=fullFilmStoryboard;
-}).catch(()=>{/* Independent video preview remains available. */});
+  return valid;
+}).catch(()=>false);
 const filmCredit=document.querySelector('#prism-film-credit');
 const filmCutStatus=document.querySelector('#prism-film-cut-status');
-Promise.all([
+const liveActionExcerptProbe=Promise.all([
  fetch('./assets/tears-of-steel-excerpt.mp4',{method:'HEAD',cache:'no-store'}),
  fetch('./assets/tears-of-steel-excerpt.vtt',{method:'HEAD',cache:'no-store'})
 ]).then(([response,subtitles])=>{
@@ -34,6 +40,10 @@ Promise.all([
   if(filmCutStatus)filmCutStatus.textContent='OPEN FILM / 65-SECOND EDIT';
  }
 }).catch(()=>{/* Stream the full open film if the optional local excerpt is absent. */});
+// Resolve the full-film sprite and optional local excerpt BEFORE mounting LIVE ACTION.
+// Without this gate, a user clicking quickly can lock a gray preview in place
+// even when the correct storyboard files exist on the server.
+const liveActionAssetsReady=Promise.allSettled([fullFilmStoryboardProbe,liveActionExcerptProbe]);
 // A public Mux playback ID can be previewed as LIVE ACTION without rebuilding PRISM.
 const query=new URLSearchParams(location.search);
 const liveMuxCandidate=query.get('liveMux');
@@ -121,7 +131,17 @@ function load(film='cinematic'){
  // Only changing the selected film remounts media; the player settings remain in the skin.
 }
 load();
-document.querySelectorAll('[data-film]').forEach(btn=>btn.addEventListener('click',()=>load(btn.dataset.film)));
+let filmSelectionSerial=0;
+function selectFilm(film){
+ const serial=++filmSelectionSerial;
+ if(film!=='liveaction'){load(film);return;}
+ // Never remount a playing movie in response to a late HEAD request.
+ // Ignore stale selections if the viewer switched films while it resolved.
+ liveActionAssetsReady.then(()=>{
+  if(serial===filmSelectionSerial)load(film);
+ });
+}
+document.querySelectorAll('[data-film]').forEach(btn=>btn.addEventListener('click',()=>selectFilm(btn.dataset.film)));
 // These are real chapter seeks into the 32-second media, not separate visual simulations.
 // They stay paused when the media was paused and respect the underlying media timeline.
 const chapterButtons=[...document.querySelectorAll('[data-chapter]')];
@@ -136,7 +156,7 @@ function syncChapterButtons(){
 }
 chapterButtons.forEach(b=>b.addEventListener('click',()=>{
   const goal=Number(b.dataset.chapter)*8+0.3;
-  if(currentFilm!=='cinematic'){load('cinematic');attachChapterReadout();}
+  if(currentFilm!=='cinematic'){selectFilm('cinematic');attachChapterReadout();}
   const media=current.media;
   const seek=()=>{
     if(current?.media!==media)return;
