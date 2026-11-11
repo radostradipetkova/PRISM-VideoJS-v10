@@ -1,0 +1,7 @@
+# Match the existing PRISM Worker to preserve its workers.dev URL.
+# Existing site: https://orange-grass-f8a7.radostradi-pogo.workers.dev/
+name = "orange-grass-f8a7"
+compatibility_date = "2026-11-11"
+
+[assets]
+directory = "./dist"
