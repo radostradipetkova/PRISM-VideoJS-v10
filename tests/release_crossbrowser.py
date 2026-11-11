@@ -209,7 +209,8 @@ async def check(browser_type, name, url, reportdir):
             opticalIndex: px('.prism-optical-loupe .prism-preview-index'),
             opticalPosition: px('.prism-loupe-position'),
             opticalFooter: px('.prism-loupe-footer'),
-            settingsOption: px('.prism-preferences-choices button'),
+            settingsOption: px('.prism-preferences-panel .prism-preferences-choices button'),
+            captionOption: px('.prism-caption-appearance .prism-preferences-choices button'),
             captionSetting: px('.prism-caption-appearance .prism-caption-setting-label'),
             chapterHelp: px('.prism-chapter-dialog-help'),
             menuTitle: px('.prism-menu-title')
@@ -217,7 +218,7 @@ async def check(browser_type, name, url, reportdir):
         }""")
         assert label_sizes['rail']>=11 and label_sizes['opticalScan']>=8, f'Rail label too small: {label_sizes}'
         assert label_sizes['opticalIndex']>=9 and label_sizes['opticalPosition']>=9 and label_sizes['opticalFooter']>=8, f'Optical scan unreadable: {label_sizes}'
-        assert label_sizes['settingsOption']>=12 and label_sizes['captionSetting']>=12 and label_sizes['menuTitle']>=12, f'Settings microtype unreadable: {label_sizes}'
+        assert label_sizes['settingsOption']>=12 and label_sizes['captionOption']>=11 and label_sizes['captionSetting']>=12 and label_sizes['menuTitle']>=12, f'Settings microtype unreadable: {label_sizes}'
         assert label_sizes['chapterHelp']>=12, f'Explore help too small: {label_sizes}'
         outcomes['compact_player_labels_readable']=label_sizes
         targets=await page.locator('#player-b .prism-control').evaluate_all('els=>els.filter(e=>getComputedStyle(e).display!=="none"&&e.getBoundingClientRect().width>0).map(e=>({w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height}))')
