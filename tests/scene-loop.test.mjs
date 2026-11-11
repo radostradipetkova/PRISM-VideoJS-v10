@@ -110,3 +110,22 @@ test('showcase and standalone skin provide matching controls and portable loop m
   const packageSkin=await readFile(new URL('../scripts/package-skin.mjs',import.meta.url),'utf8');
   assert.match(packageSkin,/scene-loop\.js/);
 });
+
+test('Scene Loop opens a caption-style popover instead of hiding in Player Settings',async()=>{
+ for(const dir of ['src','skin']){
+  const source=await readFile(new URL(`../${dir}/prism-player.js`,import.meta.url),'utf8');
+  const css=await readFile(new URL(`../${dir==='src'?'src/styles.css':'skin/prism-skin.css'}`,import.meta.url),'utf8');
+  const logic=await readFile(new URL(`../${dir}/scene-loop.js`,import.meta.url),'utf8');
+  assert.ok(source.includes('loopMenu=`${uid}-loop`'));
+  assert.ok(source.includes('commandfor="${loopMenu}"'));
+  assert.ok(source.includes('class="prism-menu prism-loop-menu" side="top" align="end"'));
+  assert.ok(source.includes('<section class="prism-loop-group" data-loop-panel'));
+  assert.ok(!source.includes('<fieldset class="prism-preferences-group prism-loop-group"'));
+  assert.ok(!source.includes("playerPreferences.open('[data-loop-in]')"));
+  assert.ok(source.indexOf('class="prism-menu prism-loop-menu"')<source.indexOf('class="prism-preferences-panel"'));
+  assert.ok(css.includes('.prism-loop-menu{box-sizing:border-box;'));
+  assert.ok(!css.includes('.prism-loop-trigger{display:none!important}'));
+  assert.ok(logic.includes("on(group,'keydown',event=>"));
+  assert.ok(logic.includes("Scene loop controls — loop active"));
+ }
+});
