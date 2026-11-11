@@ -15,6 +15,74 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
   let preview=null, fallback=null;
   const clear=()=>{if(timer!==null)clearTimeout(timer);timer=null;};
 
+  // Explore's central iris needs a real thumbnail too, not an empty dial.
+  // It is mounted lazily only once the chapter dialog opens.
+  const iris=skin.querySelector('.prism-iris');
+  const irisThumb=iris?.querySelector('.prism-iris-thumbnail');
+  let irisPreview=null,irisWanted=null,irisTimer=null,irisLast=NaN;
+  function seekIris(){
+    if(disposed || !irisPreview || irisPreview.tagName!=='VIDEO'||irisWanted===null)return;
+    if(irisPreview.seeking || !Number.isFinite(irisPreview.duration)||irisPreview.duration<=0)return;
+    const at=Math.max(0,Math.min(irisWanted,irisPreview.duration-.08));
+    if(Number.isFinite(irisLast)&&Math.abs(at-irisLast)<.2)return;
+    irisLast=at;
+    try{irisPreview.currentTime=at;}catch(_){/* unavailable remote seek */}
+  }
+  function showChapter(time){
+    if(disposed || !iris || !Number.isFinite(time))return;
+    if(!skin.querySelector('.prism-chapter-dialog')?.open)return;
+    irisWanted=Math.max(0,time);
+    if(!irisPreview){
+      if(canUseVideo){
+        irisPreview=document.createElement('video');
+        irisPreview.muted=true;
+        irisPreview.defaultMuted=true;
+        irisPreview.playsInline=true;
+        irisPreview.preload='metadata';
+        irisPreview.setAttribute('playsinline','');
+        irisPreview.disablePictureInPicture=true;
+        const source=media.currentSrc||media.getAttribute('src')||'';
+        if(source)irisPreview.src=source;
+        irisPreview.addEventListener('loadedmetadata',seekIris);
+        irisPreview.addEventListener('seeked',()=>{
+          if(irisPreview.readyState>=2)irisPreview.dataset.frameReady='true';
+          if(Math.abs(Number(irisPreview.currentTime)-irisWanted)>.25)seekIris();
+        });
+        irisPreview.addEventListener('loadeddata',()=>{
+          if(irisPreview.readyState>=2)irisPreview.dataset.frameReady='true';
+        });
+      }else{
+        irisPreview=document.createElement('img');
+        irisPreview.addEventListener('load',()=>{if(!disposed)irisPreview.dataset.frameReady='true';});
+        irisPreview.addEventListener('error',()=>{irisPreview.dataset.frameReady='false';});
+      }
+      irisPreview.className='prism-iris-liveframe';
+      irisPreview.setAttribute('aria-hidden','true');
+      irisPreview.setAttribute('tabindex','-1');
+      iris.append(irisPreview);
+    }
+    if(irisTimer!==null)clearTimeout(irisTimer);
+    irisTimer=setTimeout(()=>{
+      irisTimer=null;
+      if(canUseVideo)seekIris();
+      else if(irisThumb?.hasAttribute('data-hidden')){
+        const sample=Math.floor(irisWanted/10)*10;
+        irisPreview.dataset.frameReady='false';
+        irisPreview.src=`https://image.mux.com/${muxPlaybackId}/thumbnail.webp?width=300&time=${sample}`;
+      }else irisPreview.dataset.frameReady='false';
+    },85);
+  }
+  function destroyIris(){
+    if(irisTimer!==null)clearTimeout(irisTimer);
+    irisTimer=null;
+    if(irisPreview?.tagName==='VIDEO'){
+      irisPreview.pause();
+      irisPreview.removeAttribute('src');
+      irisPreview.load();
+    }
+    irisPreview?.remove();
+  }
+
   if(canUseVideo){
     // The video is only decoded on demand, never played or used as a track.
     // No canvas extraction: cross-origin MP4 frames can be displayed safely.
@@ -74,8 +142,9 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
         // Keep scrubbing responsive without issuing seeks for every pixel.
         timer=setTimeout(attempt,85);
       },
+      showChapter,
       destroy(){
-        disposed=true;clear();
+        disposed=true;clear();destroyIris();
         preview.pause();
         preview.removeAttribute('src');
         preview.load();
@@ -117,6 +186,7 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
       requested=time;
       clear();timer=setTimeout(paint,100);
     },
-    destroy(){disposed=true;clear();preview.removeAttribute('src');preview.remove();}
+    showChapter,
+    destroy(){disposed=true;clear();destroyIris();preview.removeAttribute('src');preview.remove();}
   };
 }
