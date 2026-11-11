@@ -29,7 +29,7 @@ export function parseStoryboardCues(raw,baseUrl){
  * A canvas draws only the selected tile; it never seeks playback or loads
  * a second copy of a 12-minute remote movie.
  */
-function initStoryboardSpritePreview({skin,storyboard}){
+function initStoryboardSpritePreview({skin,media,storyboard}){
   const housing=skin.querySelector('.prism-loupe-housing');
   const iris=skin.querySelector('.prism-iris');
   if(!housing)return {show(){},showChapter(){},destroy(){}};
@@ -46,8 +46,18 @@ function initStoryboardSpritePreview({skin,storyboard}){
     iris.append(irisCanvas);
   }
   let cues=[],pointerTime=null,chapterTime=null,disposed=false;
+  let failedStoryboardFallback=null;
   const images=new Map();
   const abort=new AbortController();
+  // If a deployment contains a bad or incomplete storyboard, never trap the
+  // optical lens on a permanently empty canvas. Recover with the independent
+  // video-frame fallback, without seeking the playing video.
+  function useVideoFallback(){
+    if(disposed||failedStoryboardFallback)return;
+    failedStoryboardFallback=initOpticalFramePreview({skin,media,storyboard:null,hasStoryboard:false});
+    if(pointerTime!==null)failedStoryboardFallback.show(pointerTime);
+    if(chapterTime!==null)failedStoryboardFallback.showChapter?.(chapterTime);
+  }
   function findCue(time){
     if(!Number.isFinite(time))return null;
     // Sorted cues, deterministic nearest cue even when the seek is on a boundary.
@@ -68,7 +78,7 @@ function initStoryboardSpritePreview({skin,storyboard}){
         paint(loupe,pointerTime);
         if(irisCanvas&&skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
       };
-      image.onerror=()=>{if(!disposed)canvas.dataset.frameReady='false';};
+      image.onerror=()=>{if(!disposed){canvas.dataset.frameReady='false';useVideoFallback();}};
       image.src=cue.src;
       return;
     }
@@ -80,7 +90,7 @@ function initStoryboardSpritePreview({skin,storyboard}){
       if(!ctx)return;
       ctx.drawImage(image,cue.x,cue.y,cue.w,cue.h,0,0,cue.w,cue.h);
       canvas.dataset.frameReady='true';
-    }catch(_){canvas.dataset.frameReady='false';}
+    }catch(_){canvas.dataset.frameReady='false';useVideoFallback();}
   }
   const vttUrl=new URL(storyboard,document.baseURI);
   fetch(vttUrl,{signal:abort.signal})
@@ -88,22 +98,26 @@ function initStoryboardSpritePreview({skin,storyboard}){
     .then(raw=>{
       if(disposed)return;
       cues=parseStoryboardCues(raw,vttUrl);
+      if(!cues.length){useVideoFallback();return;}
       if(pointerTime!==null)paint(loupe,pointerTime);
       if(chapterTime!==null && skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
-    }).catch(()=>{/* On a missing storyboard the original native thumbnail remains. */});
+    }).catch(()=>{if(!disposed)useVideoFallback();});
   return {
     show(time){
       if(!Number.isFinite(time)||disposed)return;
       pointerTime=Math.max(0,time);
-      paint(loupe,pointerTime);
+      if(failedStoryboardFallback)failedStoryboardFallback.show(pointerTime);
+      else paint(loupe,pointerTime);
     },
     showChapter(time){
       if(!Number.isFinite(time)||disposed||!irisCanvas)return;
       chapterTime=Math.max(0,time);
-      if(skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
+      if(failedStoryboardFallback)failedStoryboardFallback.showChapter?.(chapterTime);
+      else if(skin.querySelector('.prism-chapter-dialog')?.open)paint(irisCanvas,chapterTime);
     },
     destroy(){
       disposed=true;abort.abort();
+      failedStoryboardFallback?.destroy();
       for(const image of images.values()){image.onload=null;image.onerror=null;}
       loupe.remove();irisCanvas?.remove();
       images.clear();
@@ -121,7 +135,7 @@ export function initOpticalFramePreview({skin,media,muxPlaybackId=null,hasStoryb
   const nativeThumb=housing?.querySelector('.prism-loupe-image');
   if(!housing || !media || !nativeThumb)return {show(){},destroy(){}};
   // A supplied storyboard is the reliable fast path, especially for remote MP4s.
-  if(storyboard && !muxPlaybackId)return initStoryboardSpritePreview({skin,storyboard});
+  if(storyboard && !muxPlaybackId)return initStoryboardSpritePreview({skin,media,storyboard});
   const canUseVideo=!muxPlaybackId && !hasStoryboard && media.tagName==='VIDEO';
   const canUseMux=!!muxPlaybackId && /^[A-Za-z0-9]+$/.test(muxPlaybackId);
   if(!canUseVideo && !canUseMux)return {show(){},destroy(){}};
