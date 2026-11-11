@@ -211,11 +211,14 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     }
   }
   function renderIndex(){
-    launch.hidden=entries.length===0;
+    // Explore is a permanent navigation control. Do not hide it merely
+    // because the video/remote Mux metadata has not finished loading.
+    // The explicit "none" mode is the only way to hide navigation.
+    if(launch)launch.hidden=chapterMode==='none';
     const mode=indexLayout(entries.length);
     dialog.dataset.indexLayout=mode;
     dialog.dataset.indexType=entryType;
-    launch.setAttribute('aria-label',entryType==='time'?'Explore video time markers':entryType==='transcript'?'Explore dialogue navigation':'Explore the video chapters');
+    launch?.setAttribute('aria-label',entryType==='time'?'Explore video time markers':entryType==='transcript'?'Explore dialogue navigation':entries.length?'Explore the video chapters':'Explore video navigation');
     if(heading)heading.textContent=entryType==='time'?'PRISM / TIME INDEX':entryType==='transcript'?'PRISM / DIALOGUE INDEX':'PRISM / OPTICAL INDEX';
     if(searchWrap)searchWrap.hidden=mode!=='library';
     if(search)search.value='';
@@ -231,9 +234,14 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
       button.append(number,title,time);fragment.append(button);
     });
     list.replaceChildren(fragment);
-    if(emptyResults)emptyResults.hidden=true;
-    if(resultCount)resultCount.textContent='';
-    if(dialog.open && !entries.length)dialog.close();
+    if(emptyResults){
+      emptyResults.textContent=entries.length?'No matching navigation points.':
+        chapterMode==='auto'?'This film has no authored chapters yet.':
+        'Preparing the video index. Navigation points appear when metadata is ready.';
+      emptyResults.hidden=entries.length>0;
+    }
+    if(resultCount)resultCount.textContent=entries.length?'':
+      'Navigation will update automatically when chapter or video metadata arrives.';
     updateChapterIndex();
     if(entries.length)previewChapter(Math.max(0,chapterOf(Number(media.currentTime)||0)));
     syncLoupe(Number(media.currentTime)||0);
@@ -372,7 +380,7 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   // Native dialog: modal focus containment, Escape and return focus to trigger.
   function closeDialog(){if(dialog?.open)dialog.close();}
   function openDialog(){
-    if(!dialog || dialog.open || !entries.length)return;
+    if(!dialog || dialog.open || chapterMode==='none')return;
     updateChapterIndex();
     previewChapter(Math.max(0,chapterOf(Number(media.currentTime)||0)));
     launch.setAttribute('aria-expanded','true');
