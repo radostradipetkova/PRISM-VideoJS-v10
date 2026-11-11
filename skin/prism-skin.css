@@ -1080,9 +1080,9 @@
    a compact appearance subview; no second caption panel crowds Preferences. */
 .prism-skin .prism-captions-menu{box-sizing:border-box;min-width:240px;width:min(310px,calc(100cqw - 14px));max-width:calc(100cqw - 10px);overflow-y:auto;overscroll-behavior:contain}
 .prism-skin .prism-captions-menu [hidden]{display:none!important}
-.prism-skin .prism-caption-menu-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid rgba(24,26,25,.22);padding:0 0 6px 8px}
-.prism-skin .prism-caption-menu-heading .prism-menu-title{margin:0;padding:8px 2px;border:0;flex:1 1 auto}
-.prism-skin .prism-caption-gear{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;color:#292d29;background:transparent;border:1px solid rgba(36,40,36,.35);border-radius:3px;cursor:pointer}
+.prism-skin .prism-caption-menu-heading{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;border-bottom:1px solid rgba(24,26,25,.22);padding:0 0 6px}
+.prism-skin .prism-caption-menu-heading .prism-menu-title{grid-column:2;grid-row:1;margin:0;padding:8px 0;border:0;min-width:0;text-align:center}
+.prism-skin .prism-caption-gear{box-sizing:border-box;grid-column:1;grid-row:1;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;color:#292d29;background:transparent;border:1px solid rgba(36,40,36,.35);border-radius:3px;cursor:pointer}
 .prism-skin .prism-caption-gear:hover,.prism-skin .prism-caption-gear[aria-expanded="true"]{background:#e3b394;color:#25221c}
 .prism-skin .prism-captions-menu :is(button,media-menu-radio-item):focus-visible{outline:3px solid #aa4a28;outline-offset:2px}
 .prism-skin .prism-caption-appearance{padding:8px 4px 6px;color:#292a27}
