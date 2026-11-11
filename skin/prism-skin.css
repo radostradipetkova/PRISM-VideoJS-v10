@@ -954,31 +954,31 @@
 @container(max-width:420px){.prism-skin .prism-preferences-more{display:block}}
 
 
-/* PRISM Scene Loop: media-driven chapter and A–B transport, never a fixed demo reel. */
+/* PRISM Scene Loop: compact controls in the native Video.js popover. */
 .prism-skin .prism-loop-trigger.is-looping,
 .prism-skin.prism-loop-active .prism-loop-trigger{color:#241b17;background:#ee845e;border-color:#ffd5bb}
-.prism-skin .prism-loop-symbol{display:inline-flex;vertical-align:middle;margin-left:6px;color:#ef986e}
-.prism-skin .prism-loop-symbol svg{width:17px;height:17px}
-.prism-skin .prism-loop-group{display:block;padding-bottom:16px}
-.prism-skin .prism-loop-group [data-loop-context]{color:#f6bd9b;font:700 10px/1.5 'Courier New',monospace;overflow-wrap:anywhere}
-.prism-skin .prism-loop-group .prism-loop-status{min-height:31px;color:#e5e1d9;font:400 11px/1.5 Arial,sans-serif}
-.prism-skin .prism-loop-group .prism-loop-hint{margin:16px 0 8px;color:#d2c3b9}
-.prism-skin .prism-loop-mark-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.prism-skin .prism-loop-action{display:block;width:100%;min-height:44px;margin:7px 0 0;padding:9px 10px;color:#f8e9d8;background:#293236;border:1px solid rgba(255,223,195,.42);border-radius:4px;font:700 10px/1.3 'Courier New',monospace;letter-spacing:.025em;text-align:center;cursor:pointer}
-.prism-skin .prism-loop-action:hover:not(:disabled){background:#465058;border-color:#f9bb97}
-.prism-skin .prism-loop-action[aria-pressed="true"]{background:#e47750;color:#201b17;border-color:#ffd2af}
-.prism-skin .prism-loop-action:disabled{opacity:.48;cursor:not-allowed}
-.prism-skin .prism-loop-group .prism-loop-range{font:700 10px/1.5 'Courier New',monospace;color:#e9cdb9;margin:9px 0 5px}
-.prism-skin .prism-loop-stop{background:#202426;border-color:rgba(255,226,204,.26)}
-@container (max-width:660px){
-  /* Preserve compact transport and 44px controls: Loop stays in Player Settings. */
-  .prism-skin .prism-loop-trigger{display:none!important}
-}
+.prism-skin .prism-loop-menu{box-sizing:border-box;min-width:240px;width:min(330px,calc(100cqw - 14px));max-width:calc(100cqw - 10px);max-height:min(72cqh,520px);overflow-y:auto;overscroll-behavior:contain}
+.prism-skin .prism-loop-group{display:block;box-sizing:border-box;min-width:0;margin:0;padding:0 2px 3px;border:0;color:#272b28}
+.prism-skin .prism-loop-menu-heading .prism-menu-title{margin:0 0 8px;padding:9px 4px 12px;text-align:center;border-bottom:1px solid rgba(24,26,25,.22)}
+.prism-skin .prism-loop-group [data-loop-context]{margin:8px 5px 5px;color:#ae512f;font:700 10px/1.45 'Courier New',monospace;overflow-wrap:anywhere;letter-spacing:.025em}
+.prism-skin .prism-loop-group .prism-loop-status{margin:7px 5px 9px;min-height:0;color:#313531;font:400 12px/1.45 Arial,sans-serif;overflow-wrap:anywhere}
+.prism-skin .prism-loop-divider{margin:13px 4px 6px;display:flex;align-items:center;gap:10px;color:#ae512f;font:700 10px/1.2 'Courier New',monospace;letter-spacing:.08em}
+.prism-skin .prism-loop-divider:after{content:"";flex:1;border-top:1px solid rgba(24,26,25,.22)}
+.prism-skin .prism-loop-group .prism-loop-hint{margin:6px 5px 10px;color:#555852;font:400 11px/1.45 Arial,sans-serif}
+.prism-skin .prism-loop-mark-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.prism-skin .prism-loop-action{box-sizing:border-box;display:block;width:100%;min-height:44px;margin:6px 0 0;padding:9px 7px;color:#252a26;background:#eee8dc;border:1px solid #b5aba0;border-radius:2px;font:700 10px/1.35 'Courier New',monospace;letter-spacing:.02em;text-align:center;cursor:pointer;white-space:normal}
+.prism-skin .prism-loop-action:hover:not(:disabled){background:#ded7ca;border-color:#a55a3b}
+.prism-skin .prism-loop-action[aria-pressed="true"]{background:#e47750;color:#201b17;border-color:#bd4b28}
+.prism-skin .prism-loop-action:disabled{opacity:.54;cursor:not-allowed}
+.prism-skin .prism-loop-group .prism-loop-range{font:700 10px/1.5 'Courier New',monospace;color:#75442e;margin:8px 5px 4px;font-variant-numeric:tabular-nums}
+.prism-skin .prism-loop-stop{background:transparent}
+.prism-skin .prism-loop-menu button:focus-visible{outline:3px solid #aa4a28;outline-offset:2px}
+@container (max-width:420px){.prism-skin .prism-loop-menu{width:min(310px,calc(100cqw - 10px))}}
 @media (forced-colors:active){
-  .prism-skin .prism-loop-action[aria-pressed="true"]{forced-color-adjust:auto;border:2px solid Highlight}
+  .prism-skin .prism-loop-menu,.prism-skin .prism-loop-action{forced-color-adjust:auto;background:Canvas;color:CanvasText;border-color:CanvasText}
+  .prism-skin .prism-loop-action[aria-pressed="true"]{border:2px solid Highlight}
   .prism-skin .prism-loop-group :is(.prism-loop-status,.prism-loop-range,.prism-loop-hint,[data-loop-context]){color:CanvasText}
 }
-
 
 /* PRISM Caption Studio — actual native video cues, not a visual-only mock.
    CSS custom properties are per-player, so embedded players remain independent.
