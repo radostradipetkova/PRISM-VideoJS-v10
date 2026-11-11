@@ -13,6 +13,15 @@ const mount=document.querySelector('#prism-mount');
 // A real public open movie provides an immediate optional demo. Running
 // `npm run prepare:film` upgrades it to the self-hosted 65-second excerpt,
 // with exact captions and storyboard tiles for the Optical Loupe.
+// Full-film storyboard is prepared once by the GitHub asset-generation job.
+// Never claim the remote MP4 has a storyboard until the VTT actually exists.
+const fullFilmStoryboard='./assets/tears-of-steel-full-storyboard.vtt';
+fetch(fullFilmStoryboard,{method:'HEAD',cache:'no-store'}).then(response=>{
+  if(!response.ok)return;
+  // Leave Mux uploads and the prepared 65-second excerpt on their own assets.
+  if(films.liveaction.src.startsWith('https://video.blender.org/'))
+    films.liveaction.storyboard=fullFilmStoryboard;
+}).catch(()=>{/* Independent video preview remains available. */});
 const filmCredit=document.querySelector('#prism-film-credit');
 const filmCutStatus=document.querySelector('#prism-film-cut-status');
 Promise.all([
