@@ -1,3 +1,5 @@
+> **Deployment note (11 November 2026):** The complete PRISM source is now on `main`. Cloudflare Workers Builds should run `npm test && npm run build`, then `npx wrangler deploy`, targeting `prism-videojs-v10` through `wrangler.toml`.
+
 > **GitHub + Cloudflare:** This repository is prepared for automatic deployments to a **new, separate** Cloudflare Worker named `prism-videojs-v10`. See [PRISM-GITHUB-CLOUDFLARE-SETUP.md](PRISM-GITHUB-CLOUDFLARE-SETUP.md) for the one-time connection and build settings.
 
 ## New optional live-action showcase film
