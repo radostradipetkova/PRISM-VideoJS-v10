@@ -125,9 +125,18 @@ async def check(browser_type, name, url, reportdir):
         await page.keyboard.press('Escape')
         assert not await dialog.evaluate('e=>e.open'), 'Escape did not close Optical Index'
         outcomes['chapters_and_esc']=True
-        # Media A has no captions or chapters; avoid misleading controls.
-        assert await page.locator('#player-a .prism-explore-launch').is_hidden()
-        outcomes['missing_chapters_hidden']=True
+        # Media A has no authored chapters. Explore deliberately stays visible,
+        # and its empty state explains the absence of chapter metadata.
+        # An old test incorrectly required it to be hidden.
+        empty_explore=page.locator('#player-a .prism-explore-launch')
+        await empty_explore.wait_for(state='visible',timeout=10000)
+        await empty_explore.click()
+        empty_dialog=page.locator('#player-a .prism-chapter-dialog')
+        assert await empty_dialog.evaluate('e=>e.open'), 'Empty Optical Index did not open'
+        assert 'no authored chapters' in (await empty_dialog.locator('.prism-index-empty').inner_text()).lower()
+        await page.keyboard.press('Escape')
+        assert not await empty_dialog.evaluate('e=>e.open'), 'Empty Optical Index did not close'
+        outcomes['missing_chapters_explained']=True
         await page.set_viewport_size({'width':375,'height':812})
         await page.wait_for_timeout(300)
         overflow=await page.evaluate('document.documentElement.scrollWidth>document.documentElement.clientWidth+1')
