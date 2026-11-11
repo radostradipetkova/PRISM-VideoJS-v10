@@ -176,3 +176,7 @@ See [`RELEASE-QUALITY-REPORT.md`](./RELEASE-QUALITY-REPORT.md) for verified brow
 ### Fit / Fill — Video Fit
 
 Inside Player Settings, **09 / Video Fit** switches between **Fit** (default: complete image, letterboxes where necessary) and **Fill** (crop edges to use the available area). This works on real native video and Mux’s exported video part without changing player dimensions. With Remember My Settings enabled, video fit persists between visits. See `VIDEO-FIT-CONTROLS-RELEASE-NOTES.md` for test details.
+
+## Live-action chapters and automatic Mux navigation
+
+The **LIVE ACTION** option now has a working optical frame preview and a cinematic Explore index. Any public Mux asset can be previewed with `?liveMux=PLAYBACK_ID`. To enable real AI-authored chapter tracks for every Mux upload, see [Mux Robots chapter integration](docs/MUX-AI-CHAPTERS.md); until configured, PRISM uses transcript or time-based navigation rather than pretending to detect scenes.
