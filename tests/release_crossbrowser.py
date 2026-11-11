@@ -102,6 +102,25 @@ async def check(browser_type, name, url, reportdir):
         player_time=await page.locator('#player-a video.prism-media').evaluate('v=>v.currentTime')
         assert abs(player_time-original_time)<.35, 'Preview accidentally sought main media'
         outcomes['true_liveframe_preview_without_playback_interference']=True
+        # Rapid mouse jumps must resolve to the LAST hovered timestamp rather
+        # than a stale frame or the beginning of the current chapter. The
+        # separate preview decoder may need time for the final seek, but mouse
+        # movement itself must not cause a new 85ms debounce on every pixel.
+        await page.locator('#player-a .prism-rail').evaluate('''rail=>{
+            const rect=rail.getBoundingClientRect();
+            for(const fraction of [.12,.86,.62]){
+                rail.dispatchEvent(new PointerEvent('pointermove',{
+                    bubbles:true,pointerType:'mouse',clientX:rect.left+rect.width*fraction,
+                    clientY:rect.top+rect.height/2
+                }));
+            }
+        }''')
+        await page.wait_for_function('''() => {
+            const v=document.querySelector('#player-a video.prism-loupe-liveframe');
+            return v?.dataset.frameReady==='true' && !v.seeking &&
+                Math.abs(v.currentTime-v.duration*.62)<.18;
+        }''',timeout=15000)
+        outcomes['rapid_hover_tracks_latest_timestamp']=True
         # Portrait video: no cropping; authored chapter metadata and captions.
         fit=await page.locator('#player-b video.prism-media').evaluate('v=>getComputedStyle(v).objectFit')
         assert fit=='contain',f'Portrait crop risk: {fit}'
