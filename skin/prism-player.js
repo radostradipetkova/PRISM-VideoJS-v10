@@ -287,56 +287,70 @@ export function mountPrismPlayer(target, options={}) {
     target.classList.add('is-ready');
     target.classList.remove('failed');
   });
-  // Caption loading is asynchronous: a selected language alone does not prove cues loaded.
-  // The native Video.js radio group owns track choice; this only repairs native
-  // track activation when a browser reports a selected track but leaves it disabled.
+  // The Mux element proxies its INTERNAL video's textTracks. Its light-DOM
+  // <track>.track and readyState do not represent the active rendered cues.
+  // Use the media adapter's actual textTracks for both Mux and native video.
+  const mediaElement = target.querySelector('.prism-media');
   const captionMenu=target.querySelector('.prism-captions-menu');
   const captionTrigger=target.querySelector('.prism-captions-trigger');
   const captionStatus=captionMenu?.querySelector('[data-caption-track-status]');
   const captionTrackNode=target.querySelector('.prism-media track[kind="captions"]');
+  const actualCaptionNode=mediaElement?.shadowRoot?.querySelector('video track[kind="captions"]') || captionTrackNode;
+  const captionTrackList=mediaElement?.textTracks;
   let captionsWereExplicitlyChanged=false;
+  const captionTracks=()=>[...(mediaElement?.textTracks||[])].filter(track=>['captions','subtitles'].includes(track.kind));
   function captionTrackState(){
-    if(!captionTrackNode || !captionStatus)return;
-    const state=captionTrackNode.readyState;
-    if(state===3) captionStatus.textContent='Subtitle track could not load. Check the VTT file.';
-    else if(state===2) captionStatus.textContent='';
-    else if(state===1) captionStatus.textContent='Loading subtitles…';
+    if(!captionStatus)return;
+    const active=captionTracks().find(track=>track.mode==='showing');
+    const node=mediaElement?.shadowRoot?.querySelector('video track[kind="captions"],video track[kind="subtitles"]') || actualCaptionNode;
+    if(!active){captionStatus.textContent='';return;}
+    if(node?.readyState===3)captionStatus.textContent='Subtitle track could not load. Check the VTT file.';
+    else if(node?.readyState===1 || (node?.readyState===0 && !(active.cues?.length>0)))
+      captionStatus.textContent='Loading subtitles…';
     else captionStatus.textContent='';
   }
   captionTrackNode?.addEventListener('load',captionTrackState);
   captionTrackNode?.addEventListener('error',captionTrackState);
-  // Turning captions on always requests the browser's text-track loading path.
-  // In particular, the optional live-action excerpt enables English by default.
+  if(actualCaptionNode!==captionTrackNode){
+    actualCaptionNode?.addEventListener('load',captionTrackState);
+    actualCaptionNode?.addEventListener('error',captionTrackState);
+  }
+  // Initial captions must activate the real media track, NOT Mux's inert light-DOM node.
   function initializeDefaultCaptions(){
-    if(!captionsDefault || captionsWereExplicitlyChanged || !captionTrackNode)return;
-    const track=captionTrackNode.track;
-    if(track && track.mode==='disabled')track.mode='showing';
+    if(!captionsDefault || captionsWereExplicitlyChanged)return;
+    const tracks=captionTracks();
+    const chosen=tracks.find(track=>track.language===captionLang)||tracks[0];
+    if(chosen){
+      for(const track of tracks)track.mode=track===chosen?'showing':'disabled';
+    }else if(captionTrackNode && mediaElement?.tagName==='VIDEO'){
+      // Before native metadata, touching the HTMLTrackElement requests VTT loading.
+      const track=captionTrackNode.track;
+      if(track && track.mode==='disabled')track.mode='showing';
+    }
     captionTrackState();
   }
   const onCaptionClick=event=>{
     const item=event.target.closest?.('media-menu-radio-item');
-    if(!item)return;
+    if(!item || !item.closest('media-captions-radio-group'))return;
     captionsWereExplicitlyChanged=true;
     const label=item.querySelector('[data-part="label"]')?.textContent?.trim() || item.textContent?.trim() || '';
     const choosingOff=item===item.closest('media-captions-radio-group')?.querySelector('media-menu-radio-item') || /^off$/i.test(label);
     queueMicrotask(()=>{
-      const list=target.querySelector('.prism-media')?.textTracks;
-      if(!list)return;
-      const tracks=[...list].filter(track=>['captions','subtitles'].includes(track.kind));
-      if(choosingOff){tracks.forEach(track=>{track.mode='disabled'});return;}
-      if(!tracks.some(track=>track.mode==='showing')){
+      const tracks=captionTracks();
+      if(choosingOff){for(const track of tracks)track.mode='disabled';}
+      else{
         const preferred=tracks.find(track=>track.label===label || track.language===captionLang)||tracks[0];
-        if(preferred)preferred.mode='showing';
+        if(preferred)for(const track of tracks)track.mode=track===preferred?'showing':'disabled';
       }
       captionTrackState();
     });
   };
   captionMenu?.addEventListener('click',onCaptionClick);
   captionTrigger?.addEventListener('click',captionTrackState);
+  captionTrackList?.addEventListener?.('addtrack',initializeDefaultCaptions);
   const player = target.querySelector('video-player');
-  const mediaElement = target.querySelector('.prism-media');
   const skin = target.querySelector('.prism-skin');
-  const mediaForCaptionDefault=target.querySelector('.prism-media');
+  const mediaForCaptionDefault=mediaElement;
   mediaForCaptionDefault?.addEventListener('loadedmetadata',initializeDefaultCaptions);
   if(captionsDefault)initializeDefaultCaptions();
   const statusCopy = target.querySelector('.prism-status-copy');
@@ -446,6 +460,11 @@ export function mountPrismPlayer(target, options={}) {
     captionTrigger?.removeEventListener('click',captionTrackState);
     captionTrackNode?.removeEventListener('load',captionTrackState);
     captionTrackNode?.removeEventListener('error',captionTrackState);
+    if(actualCaptionNode!==captionTrackNode){
+      actualCaptionNode?.removeEventListener('load',captionTrackState);
+      actualCaptionNode?.removeEventListener('error',captionTrackState);
+    }
+    captionTrackList?.removeEventListener?.('addtrack',initializeDefaultCaptions);
     mediaForCaptionDefault?.removeEventListener('loadedmetadata',initializeDefaultCaptions);
     playerPreferences.destroy();
     fullscreenKeyboard.destroy();
