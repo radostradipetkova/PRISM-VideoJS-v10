@@ -39,6 +39,26 @@ async def check(browser_type, name, url, reportdir):
             state=await page.locator(selector).evaluate('v=>({time:v.currentTime,duration:v.duration,error:v.error?.message||null,width:v.videoWidth,height:v.videoHeight,paused:v.paused})')
             assert not state['error'] and state['time']>.15 and not state['paused'],f'{ident} playback: {state}'
             outcomes[f'{ident}_real_video_playback']=state
+        # Scene Loop lives in a compact native Video.js popover, not Player Settings.
+        loop_trigger=page.locator('#player-a .prism-loop-trigger')
+        await loop_trigger.evaluate('(button)=>button.click()')
+        loop_menu=page.locator('#player-a .prism-loop-menu')
+        await page.wait_for_function('document.querySelector("#player-a .prism-loop-menu")?.hasAttribute("data-open")',timeout=10000)
+        assert await page.locator('#player-a [data-loop-panel]').count()==1
+        assert await page.locator('#player-a .prism-preferences-panel [data-loop-panel]').count()==0
+        video_a=page.locator('#player-a video.prism-media')
+        await video_a.evaluate('(video)=>{video.pause();video.currentTime=1;}')
+        await page.wait_for_function('document.querySelector("#player-a video.prism-media")?.currentTime>=.95',timeout=10000)
+        await loop_menu.locator('[data-loop-in]').click(force=True)
+        await video_a.evaluate('(video)=>{video.currentTime=4;}')
+        await page.wait_for_function('document.querySelector("#player-a video.prism-media")?.currentTime>=3.95',timeout=10000)
+        await loop_menu.locator('[data-loop-out]').click(force=True)
+        await loop_menu.locator('[data-loop-ab]').click(force=True)
+        assert await page.evaluate('window.PRISM_REUSABLE_DEMO.a.getSceneLoopState().active?.type')=='ab', 'A–B loop did not activate'
+        await loop_menu.locator('[data-loop-off]').click(force=True)
+        assert await page.evaluate('window.PRISM_REUSABLE_DEMO.a.getSceneLoopState().active') is None, 'Stop Loop did not work'
+        outcomes['compact_loop_menu_and_ab_controls']=True
+        await page.keyboard.press('Escape')
         # Portrait video: no cropping; authored chapter metadata and captions.
         fit=await page.locator('#player-b video.prism-media').evaluate('v=>getComputedStyle(v).objectFit')
         assert fit=='contain',f'Portrait crop risk: {fit}'
