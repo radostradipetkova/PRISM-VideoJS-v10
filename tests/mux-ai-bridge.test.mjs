@@ -36,7 +36,9 @@ test('Mux bridge preserves static Cloudflare asset serving and scopes API routin
   for(const file of ['src/optical-touch.js','skin/optical-touch.js']){
     const content=readFileSync(new URL('../'+file,import.meta.url),'utf8');
     assert.ok(content.includes("new URL('/api/mux/chapters',location.origin)"));
-    assert.ok(content.includes('muxChapters=normalizeChapters(body.chapters)'));
+    assert.ok(content.includes('const remote=normalizeChapters(body?.chapters)'));
+    assert.ok(content.includes('muxChapters=remote'));
+    assert.ok(content.includes('refreshIndex()'));
   }
 });
 

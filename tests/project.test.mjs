@@ -58,7 +58,9 @@ test('showcase film switcher changes media, with no unused page-theme or width c
  const app=await read('src/app.js');
  const html=await read('index.html');
  assert.match(app,/document\.querySelectorAll\('\[data-film\]'\)\.forEach/);
- assert.match(app,/load\(btn\.dataset\.film\)/);
+ assert.match(app,/btn\.addEventListener\('click',\(\)=>selectFilm\(btn\.dataset\.film\)\)/);
+ assert.match(app,/liveActionAssetsReady\.then/);
+ assert.match(app,/if\(serial===filmSelectionSerial\)load\(film\)/);
  assert.match(app,/if\(current\)current\.destroy\(\)/);
  assert.doesNotMatch(app,/documentElement\.dataset\.theme=selected|updateWidth|ambient-switch/);
  assert.doesNotMatch(html,/data-theme=|id="player-width"|id="ambient-switch"/);
