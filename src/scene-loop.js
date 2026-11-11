@@ -70,7 +70,7 @@ export function initSceneLoop({skin,media,getChapters=()=>[]}={}){
   };
   const chapters=()=>{
     const result=getChapters();
-    return result?.type==='chapters'?normalizeChapters(result.entries,mediaDuration(media)??NaN):[];
+    return result && ['chapters','transcript','time'].includes(result.type)?normalizeChapters(result.entries,mediaDuration(media)??NaN):[];
   };
   const supported=()=>mediaDuration(media)!==null && Number(media.readyState)>=1;
   const format=t=>Number.isFinite(t)?formatIndexTime(t):'--:--';
@@ -90,7 +90,8 @@ export function initSceneLoop({skin,media,getChapters=()=>[]}={}){
     if(chapterButton){
       chapterButton.disabled=!scene || !isLoopRangeSeekable(media,scene.from,scene.to);
       chapterButton.setAttribute('aria-pressed',String(active?.type==='chapter'));
-      chapterButton.textContent=active?.type==='chapter'?'↻ STOP CHAPTER LOOP':'↻ LOOP THIS CHAPTER';
+      const synthetic=getChapters()?.type!=='chapters';
+      chapterButton.textContent=active?.type==='chapter'?'↻ STOP LOOP':synthetic?'↻ LOOP THIS SEGMENT':'↻ LOOP THIS CHAPTER';
     }
     if(inButton)inButton.disabled=!viable;
     if(outButton)outButton.disabled=!viable;
@@ -103,7 +104,7 @@ export function initSceneLoop({skin,media,getChapters=()=>[]}={}){
     if(range)range.textContent=`IN ${format(a)}  →  OUT ${format(b)}`;
     if(context){
       context.textContent=!viable?'ON-DEMAND VIDEO REQUIRED':
-        scene?`CURRENT CHAPTER / ${scene.title} · ${format(scene.from)}–${format(scene.to)}`:
+        scene?`${getChapters()?.type==='chapters'?'CURRENT CHAPTER':'CURRENT SEGMENT'} / ${scene.title} · ${format(scene.from)}–${format(scene.to)}`:
         'NO AUTHORED CHAPTERS · USE IN / OUT';
     }
     if(status){
