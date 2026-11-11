@@ -230,7 +230,7 @@ async def check(browser_type, name, url, reportdir):
             assert layout['play']['width']>=49 and layout['play']['height']>=49, f'{viewport}px: play priority too small'
             assert layout['time']['width']>=80, f'{viewport}px: unreadable playback time'
             assert layout['rail']['width']>=layout['skin']['width']*.85, f'{viewport}px: precision rail reduced'
-            assert layout['right']['bottom']<=layout['skin']['bottom']+2, f'{viewport}px: lower controls escape player'
+            assert layout['right']['bottom']<=layout['skin']['bottom']+2, f'{viewport}px: lower controls escape player: {layout}'
             assert layout['movie']['bottom']<=layout['rail']['top']+1, f'{viewport}px: mobile deck covers movie'
             for item in layout['controls']:
                 assert item['width']>=43.5 and item['height']>=43.5, f'{viewport}px: undersized control {item}'

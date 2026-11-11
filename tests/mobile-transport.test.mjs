@@ -12,6 +12,7 @@ for(const part of ['src/styles.css','skin/prism-skin.css']){
   assert.match(css,/@container \(max-width:600px\)/);
   assert.match(css,/height:calc\(56\.25cqw \+ 184px\)/);
   assert.match(css,/@container \(max-width:310px\)/);
+  assert.match(css,/@container \(min-width:481px\) and \(max-width:600px\)/);
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(44px,1fr\)\)/);
  });
 }

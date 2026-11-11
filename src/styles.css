@@ -1611,3 +1611,10 @@
   }
   .prism-skin .prism-group-right .prism-control{justify-self:center}
 }
+
+/* Mid-width portrait phones and reusable embeds expose the rail caption,
+   which adds a line of metadata: reserve its space rather than clipping
+   the right-hand row or shrinking 44px targets. */
+@container (min-width:481px) and (max-width:600px){
+  .prism-skin{height:calc(56.25cqw + 224px)}
+}
