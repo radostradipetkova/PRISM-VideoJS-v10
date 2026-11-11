@@ -45,3 +45,21 @@ test('short comparison page is offline-only, opt-in and never changes default pl
  assert.match(compare,/currentTime>=10/);
  assert.match(compare,/compare\.disabled=false/);
 });
+
+test('full live-action movie has real authored chapter navigation and frame preview',()=>{
+ const full=read('../assets/tears-of-steel-full-chapters.vtt');
+ assert.match(full,/^WEBVTT/);
+ for(const label of ['THE PAST','SYSTEMS GO','MEMORY OVERWRITE','AFTERMATH']) assert.ok(full.includes(label));
+ assert.match(app,/chaptersVtt:'\\.\\/assets\\/tears-of-steel-full-chapters\\.vtt'/);
+ assert.ok(builder.includes('tears-of-steel-full-chapters.vtt'));
+ const touch=read('../src/optical-touch.js');
+ const frames=read('../src/frame-preview.js');
+ assert.ok(touch.includes('initOpticalFramePreview'));
+ assert.ok(frames.includes("document.createElement('video')"));
+ assert.ok(frames.includes('preview.currentTime=time'));
+});
+test('Mux uploads can be previewed in live action mode and get adaptive chapter fallback',()=>{
+ assert.match(app,/query\\.get\\('liveMux'\\)/);
+ assert.match(app,/muxPlaybackId:liveMuxId/);
+ assert.match(app,/indexMode\\?\\?\\(\\(film==='liveaction'\\|\\|isMuxCinematic\\)\\?'smart':'auto'\\)/);
+});
