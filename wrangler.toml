@@ -1,6 +1,6 @@
-# Match the existing PRISM Worker to preserve its workers.dev URL.
-# Existing site: https://orange-grass-f8a7.radostradi-pogo.workers.dev/
-name = "orange-grass-f8a7"
+# PRISM dedicated GitHub-connected Cloudflare Worker.
+# This is intentionally separate from orange-grass-f8a7.
+name = "prism-videojs-v10"
 compatibility_date = "2026-11-11"
 
 [assets]
