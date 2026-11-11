@@ -1138,3 +1138,59 @@
 @media(max-width:620px){
   .prism-skin .prism-iris .prism-iris-sprite-preview{inset:17%;width:66%;height:66%}
 }
+
+/* PRISM 2.6 — LEGIBLE MICROTYPE
+   Restore readable functional text without inflating playback controls.
+   The same scoped rules ship with the standalone Video.js skin. */
+.prism-skin .prism-film-identity,
+.prism-skin .prism-frame-caption{font-size:11px;line-height:1.4;letter-spacing:.065em}
+.prism-skin .prism-rail-meta{font-size:12px;line-height:1.35;letter-spacing:.055em}
+.prism-skin .prism-rail-meta .prism-rail-code{font-size:11px!important;letter-spacing:.06em!important}
+.prism-skin .prism-text-caption,.prism-skin .prism-skip small{font-size:11px}
+.prism-skin .prism-time{font-size:13px}
+.prism-skin .prism-dock-foot{font-size:11px;letter-spacing:.07em}
+.prism-skin .prism-menu-title{font-size:12px;letter-spacing:.065em;color:#805039}
+.prism-skin .prism-menu-item{font-size:13px;line-height:1.35}
+.prism-skin .prism-chapter-dialog-help{font-size:12px;line-height:1.5;letter-spacing:.045em}
+.prism-skin .prism-chapter-choice-time{font-size:12px;line-height:1.2}
+.prism-skin .prism-index-search-wrap,.prism-skin .prism-index-result-count{font-size:12px}
+.prism-skin .prism-iris-label{font-size:9px;line-height:1.2;letter-spacing:0}
+.prism-skin .prism-preferences-heading span{font-size:11px}
+.prism-skin .prism-preferences-group legend{font-size:12px}
+.prism-skin .prism-preferences-group p{font-size:12px;line-height:1.5}
+.prism-skin .prism-preferences-choices button{font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+.prism-skin .prism-caption-appearance .prism-preferences-choices button{font-size:11px;line-height:1.25}
+.prism-skin .prism-preferences-toggle strong{font-size:12px}
+.prism-skin .prism-preferences-toggle small{font-size:12px;line-height:1.4}
+.prism-skin .prism-preferences-note{font-size:12px;line-height:1.5}
+.prism-skin .prism-caption-setting-label,
+.prism-skin .prism-caption-appearance .prism-caption-setting-label{font-size:12px;line-height:1.35}
+.prism-skin .prism-keyboard-guide-expand{font-size:11px}
+.prism-skin .prism-keyboard-guide :is(.prism-keyboard-guide-intro,.prism-keyboard-guide-note,.prism-keyboard-guide-hint,.prism-shortcut-row){font-size:12px;line-height:1.45}
+.prism-skin .prism-shortcut-keys kbd{font-size:12px}
+.prism-skin .prism-loop-action{font-size:12px;line-height:1.35}
+.prism-skin .prism-loop-divider{font-size:11px}
+.prism-skin .prism-caption-track-status{font-size:12px;line-height:1.45}
+/* The Optical Loupe keeps its tight cinematic proportions, but does not
+   shrink vital scan/time labels down to 6px on compact screens. */
+.prism-skin .prism-optical-loupe{min-width:146px}
+.prism-skin .prism-loupe-scan-label{font-size:9px;line-height:1.2;letter-spacing:.025em}
+.prism-skin .prism-optical-loupe .prism-preview-index{font-size:11px;line-height:1.25;min-height:14px;letter-spacing:.04em}
+.prism-skin .prism-loupe-position{font-size:10px;line-height:1.2;letter-spacing:.03em}
+.prism-skin .prism-loupe-footer{font-size:9px;line-height:1.25;letter-spacing:0;min-height:12px}
+@container (max-width:660px){
+ .prism-skin .prism-optical-loupe{min-width:136px}
+ .prism-skin .prism-loupe-scan-label{font-size:8px}
+ .prism-skin .prism-optical-loupe .prism-preview-index{font-size:10px}
+ .prism-skin .prism-loupe-position{font-size:9px}
+ .prism-skin .prism-loupe-footer{font-size:8px}
+ .prism-skin .prism-rail-meta{font-size:11px}
+ .prism-skin .prism-time{font-size:12px}
+}
+@container (max-width:420px){
+ .prism-skin .prism-optical-loupe{min-width:126px}
+ .prism-skin .prism-loupe-scan-label{font-size:8px}
+ .prism-skin .prism-optical-loupe .prism-preview-index{font-size:9px}
+ .prism-skin .prism-loupe-position{font-size:9px}
+ .prism-skin .prism-loupe-footer{font-size:8px}
+}
