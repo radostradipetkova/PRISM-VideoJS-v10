@@ -23,6 +23,25 @@ jobs:
         run: npm test
       - name: Assemble public static site
         run: npm run build
+      - name: Audit deployable assets, accessibility, and media
+        run: npm run audit:static
+      - name: Package and validate the reusable Video.js skin
+        run: |
+          npm run build:skin
+          node --check skin-dist/prism-player.js
+          node --check skin-dist/optical-touch.js
+          node --check skin-dist/frame-preview.js
+          node --check worker/index.js
+          node --input-type=module -e '
+            import {stat,readFile} from "node:fs/promises";
+            for(const name of ["LICENSE","README.md","index.js","register-videojs.js","prism-skin.css","package.json"]){
+              await stat("skin-dist/"+name);
+            }
+            const pkg=JSON.parse(await readFile("skin-dist/package.json","utf8"));
+            if(pkg.type!=="module" || !pkg.exports?.["."] || !pkg.exports?.["./styles.css"])
+              throw Error("Portable skin package exports are missing");
+            console.log("Validated independent PRISM skin package and Worker syntax");
+          '
       - name: Upload the deployable site
         uses: actions/upload-artifact@v4
         with:
