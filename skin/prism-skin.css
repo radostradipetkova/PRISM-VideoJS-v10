@@ -1375,3 +1375,9 @@
     background:Canvas;color:CanvasText;border:2px solid CanvasText
   }
 }
+
+/* The icon-only Playback trigger now matches adjacent transport buttons. */
+.prism-skin .prism-control.prism-settings-trigger:not(.prism-captions-trigger){
+  min-width:44px;min-height:44px;padding:9px;
+  border-color:transparent;gap:0;
+}

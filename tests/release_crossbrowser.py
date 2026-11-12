@@ -33,6 +33,8 @@ async def check(browser_type, name, url, reportdir):
         # No duplicate PLAYBACK text: the compact icon still opens the menu.
         speed=page.locator('#player-a .prism-settings-trigger')
         assert await speed.locator('.prism-text-caption').count()==0, 'Playback button still has a text label'
+        speed_size=await speed.bounding_box()
+        assert speed_size['width']<=64, f'Playback trigger still wider than adjacent icon buttons: {speed_size}'
         await speed.hover()
         hint=page.locator('#player-a .prism-control-hint')
         await hint.wait_for(state='visible',timeout=5000)

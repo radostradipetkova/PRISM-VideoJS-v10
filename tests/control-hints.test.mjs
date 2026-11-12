@@ -32,3 +32,10 @@ for(const part of ['src','skin']){
 test('independent skin package includes the tooltip runtime',()=>{
   assert.match(read('scripts/package-skin.mjs'),/'control-hints.js'/);
 });
+
+test('icon-only Playback trigger shares the neighboring icon sizing',()=>{
+ for(const file of ['src/styles.css','skin/prism-skin.css']){
+   assert.match(read(file),/\.prism-control\.prism-settings-trigger:not\(\.prism-captions-trigger\)/);
+   assert.match(read(file),/border-color:transparent;gap:0/);
+ }
+});
