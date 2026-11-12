@@ -32,11 +32,11 @@ async def verify(name, browser_type, base):
           const v=document.querySelector('#prism-mount video.prism-media');
           return v?.currentTime>.15 && !v.paused && !v.error;
         }""",timeout=20000)
-        css=await page.locator('#prism-mount .prism-skin').evaluate('el=>({
+        css=await page.locator('#prism-mount .prism-skin').evaluate('''el=>({
           display:getComputedStyle(el).display,
           width:el.getBoundingClientRect().width,
           background:getComputedStyle(el).backgroundColor
-        })')
+        })''')
         assert css['width']>250 and css['display']!='none', f'Production CSS failed: {css}'
         print(f'OPTIMIZED RELEASE {name} PASS: playback, seek, Optical Deck, mobile layout')
     finally:
