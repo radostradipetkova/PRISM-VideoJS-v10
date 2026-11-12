@@ -29,3 +29,12 @@ test('previously flagged editorial labels have accessible opaque colors',()=>{
  '.access-card .access-demo-instruction{color:#28231f}'])
  assert.ok(css.includes(fragment),fragment);
 });
+
+test('pinned Video.js global styling is same-origin in the showcase',()=>{
+ const html=read('index.html'),css=read('src/videojs-global.css');
+ assert.match(html,/rel="stylesheet" href="\.\/src\/videojs-global\.css"/);
+ assert.doesNotMatch(html,/rel="stylesheet" href="https:\/\/cdn\.jsdelivr\.net\/npm\/@videojs\/cdn@10\.3\.0\/global\.css"/);
+ assert.match(css,/@property --media-slider-fill/);
+ assert.match(css,/media-container video::\-webkit-media-text-track-container/);
+ assert.match(css,/media-dialog,media-alert-dialog,media-error-dialog/);
+});
