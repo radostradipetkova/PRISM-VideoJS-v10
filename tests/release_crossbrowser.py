@@ -369,9 +369,9 @@ async def check(browser_type, name, url, reportdir):
             # Popover data-open and actual visibility can briefly disagree
             # after selecting a rendition. Reopen based on rendered state.
             if not await auto_choice.is_visible():
-                await speed_button.evaluate('(button)=>button.click()')
-            # Opening a Web Component menu is asynchronous. Clicking a
-            # second time before visibility changes would CLOSE it again.
+                # Use a trusted Playwright click here: the HTML commandfor
+                # popover requires a real user activation to reopen.
+                await speed_button.click()
             await auto_choice.wait_for(state='visible',timeout=12000)
             await auto_choice.evaluate('(item)=>item.click()')
             await page.wait_for_function("""() => {
