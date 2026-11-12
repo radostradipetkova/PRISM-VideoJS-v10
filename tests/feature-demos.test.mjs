@@ -80,3 +80,40 @@ test('Keyboard arrows and Space on the focused accessibility card seek and toggl
  await tick();
  assert.equal(media.paused,false);
 });
+
+test('iOS-style delayed seekable metadata replays the requested accessibility seek',async()=>{
+ const root=new MockRoot(),demos=initFeatureDemos(root),media=new MockMedia(18);
+ media.readyState=0;
+ media.seekable={length:0,start:()=>0,end:()=>18};
+ demos.setMedia(media);
+ fire(root.keys[2],'click');
+ await tick();
+ assert.match(root.querySelector('.access-demo-feedback').textContent,/SEEK QUEUED/);
+ media.seekable={length:1,start:()=>0,end:()=>18};
+ media.readyState=2;
+ fire(media,'loadedmetadata');
+ assert.equal(media.currentTime,5);
+ assert.match(root.querySelector('.access-demo-feedback').textContent,/SEEK READY/);
+});
+
+test('old film events cannot update a newly mounted player after source switch',()=>{
+ const root=new MockRoot(),demos=initFeatureDemos(root),first=new MockMedia(18),second=new MockMedia(24);
+ demos.setMedia(first);
+ demos.setMedia(second);
+ second.currentTime=3;
+ const current=root.querySelector('#rail-demo-current').textContent;
+ first.currentTime=17;
+ assert.equal(root.querySelector('#rail-demo-current').textContent,current);
+});
+
+test('queued seeks from removed media are discarded when switching films',async()=>{
+ const root=new MockRoot(),demos=initFeatureDemos(root),first=new MockMedia(18),second=new MockMedia(24);
+ first.readyState=0;
+ first.seekable={length:0};
+ demos.setMedia(first);
+ fire(root.keys[2],'click');await tick();
+ demos.setMedia(second);
+ fire(first,'loadedmetadata');
+ assert.equal(second.currentTime,0);
+ assert.equal(root.querySelector('.access-demo-feedback').textContent,'READY / YOUR MOVE');
+});
