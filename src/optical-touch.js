@@ -10,6 +10,13 @@ export const DEFAULT_CHAPTERS = Object.freeze([
   {time:16,title:'LIQUID'}, {time:24,title:'GOLDEN HOUR'}
 ]);
 export const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
+// Safari on iPhone/iPad delegates media volume to hardware buttons. iPadOS can
+// identify as Mac, so use touch capability as well as the reported platform.
+export function isIOSVolumeLocked(navigatorObject=globalThis.navigator){
+  const platform=navigatorObject?.platform || '';
+  return /iPhone|iPad|iPod/.test(platform) ||
+    (platform==='MacIntel' && Number(navigatorObject?.maxTouchPoints)>1);
+}
 export function chapterAtTime(chapters,time){
   if (!chapters.length) return -1;
   for (let i=chapters.length-1;i>=0;i--) if(time>=chapters[i].time) return i;
@@ -500,7 +507,9 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
   }
   function gesturesAreEnabled(){
     // Vertical swipes are deliberately fullscreen-only unless user opts in.
-    return Boolean(document.fullscreenElement && (document.fullscreenElement===skin || document.fullscreenElement.contains(skin)))
+    const fullscreen=document.fullscreenElement || document.webkitFullscreenElement;
+    return Boolean(fullscreen && (fullscreen===skin || fullscreen.contains?.(skin)))
+      || skin.classList.contains('prism-allow-embed-swipes')
       || Boolean(skin.closest('.prism-allow-embed-swipes'));
   }
   function getMediaViewport(){return skin.getBoundingClientRect();}
@@ -532,6 +541,9 @@ export function initOpticalTouch({skin,media,chapters=[],chapterMode='auto',muxP
     press.swipe=true;
     const delta=-dy/Math.max(170,getMediaViewport().height);
     if(press.region==='right'){
+      // iOS does not expose hardware volume controls to website JavaScript.
+      // Never show a fake percentage or imply that the swipe changed volume.
+      if(isIOSVolumeLocked()){showFeedback('VOLUME / USE DEVICE BUTTONS');return;}
       const requested=clamp(press.initialVolume+delta,0,1);
       try{media.volume=requested;}catch(_){/* iOS hardware volume */}
       if(Math.abs(Number(media.volume)-requested)>.05){
