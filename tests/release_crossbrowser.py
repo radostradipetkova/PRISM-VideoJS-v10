@@ -65,6 +65,30 @@ async def check(browser_type, name, url, reportdir):
             state=await page.locator(selector).evaluate('v=>({time:v.currentTime,duration:v.duration,error:v.error?.message||null,width:v.videoWidth,height:v.videoHeight,paused:v.paused})')
             assert not state['error'] and state['time']>.15 and not state['paused'],f'{ident} playback: {state}'
             outcomes[f'{ident}_real_video_playback']=state
+        # Vanishing Interface: genuine pause, volume and seek events selectively
+        # emphasize the relevant instrument without removing native controls.
+        film=page.locator('#player-a video.prism-media')
+        await film.evaluate('(v)=>v.pause()')
+        await page.wait_for_function("""() =>
+          document.querySelector('#player-a .prism-skin')?.dataset.opticalAttention==='transport'
+        """,timeout=4000)
+        transport_opacity=await page.locator('#player-a .prism-bottom').evaluate(
+            '(el)=>Number(getComputedStyle(el).opacity)')
+        assert transport_opacity>.95, 'Paused transport was not revealed'
+        await film.evaluate('(v)=>{v.volume=.42;v.muted=false;}')
+        await page.wait_for_function("""() =>
+          document.querySelector('#player-a .prism-skin')?.dataset.opticalAttention==='volume'
+        """,timeout=4000)
+        gauge=page.locator('#player-a .prism-volume-scale')
+        assert await gauge.get_attribute('aria-hidden')=='true'
+        assert (await gauge.locator('.prism-volume-scale-value').inner_text()).endswith('%')
+        await film.evaluate('(v)=>{v.currentTime=3.2;}')
+        await page.wait_for_function("""() =>
+          document.querySelector('#player-a .prism-skin')?.dataset.opticalAttention==='seek'
+        """,timeout=4000)
+        assert await page.locator('#player-a .prism-rail').count()==1
+        await film.evaluate('(v)=>{v.muted=true;return v.play()}')
+        outcomes['vanishing_interface_real_pause_volume_seek']=True
         # Tab focuses a real PRISM control. Escape should clear its focus
         # outline without clicking it, opening Settings or changing playback.
         prefs=page.locator('#player-a .prism-preferences-trigger')
