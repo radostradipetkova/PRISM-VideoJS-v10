@@ -1740,3 +1740,19 @@
 .prism-noscript p{margin:0}
 .prism-noscript a{color:#ffd0ae;text-decoration:underline;text-underline-offset:3px}
 .prism-noscript a:focus-visible{outline:3px solid #fff9f0;outline-offset:3px}
+
+/* iOS touch correction: the active gesture surface must opt out of browser
+   panning too, not just the parent skin. Keep menu scrolling and pinch zoom
+   available whenever gestures are switched off. */
+.prism-skin.prism-allow-embed-swipes .prism-media,
+.prism-skin.prism-allow-embed-swipes video,
+.prism-skin.prism-allow-embed-swipes mux-video,
+.prism-skin:fullscreen .prism-media,
+.prism-skin:fullscreen video,
+.prism-skin:fullscreen mux-video{touch-action:none}
+.prism-skin .prism-preferences-panel{touch-action:pan-y;overscroll-behavior:contain}
+.prism-skin .prism-preferences-toggle,
+.prism-skin .prism-preferences-toggle input{touch-action:manipulation}
+.prism-skin.minimal-motion *,
+.prism-skin.minimal-motion *::before,
+.prism-skin.minimal-motion *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
