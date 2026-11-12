@@ -2,8 +2,7 @@
  * Video.js is loaded from a version-pinned official CDN. This builder copies
  * runtime assets only: never publish source generators, tests or raw project files.
  */
-import {cp,mkdir,rm,stat,readFile,writeFile} from 'node:fs/promises';
-import {transform} from 'esbuild';
+import {cp,mkdir,rm,stat,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -52,21 +51,3 @@ await writeFile(path.join(dst,'assets','prism-media-manifest.json'),JSON.stringi
  fullFilmStoryboard:fullFilmStoryboardReady,
  liveActionExcerpt:liveActionExcerptReady
 })+'\n');
-
-// Only minimize the DEPLOYABLE files, never the authored source or the reusable
-// skin. esbuild parses CSS and JavaScript (instead of fragile regex stripping).
-// Keep imports as ESM: no HLS adapter replacement, no remapped CDN specifiers,
-// and no alteration to module side-effect order or keyboard/gesture behavior.
-for (const [name,loader,options] of [
-  ['src/styles.css','css',{}],
-  ['src/optical-touch.js','js',{format:'esm',target:'es2020'}],
-]) {
-  const file=path.join(dst,name);
-  const source=await readFile(file,'utf8');
-  const result=await transform(source,{
-    loader,minify:true,charset:'utf8',legalComments:'inline',...options
-  });
-  if(!result.code)throw Error('Failed to optimize '+name);
-  await writeFile(file,result.code);
-  console.log('Optimized '+name+': '+source.length+' -> '+result.code.length+' characters');
-}
