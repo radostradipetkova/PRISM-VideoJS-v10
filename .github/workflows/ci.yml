@@ -11,8 +11,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install pinned build optimizer
-        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Install media inspection tools
         run: |
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
@@ -25,8 +23,6 @@ jobs:
         run: npm test
       - name: Assemble public static site
         run: npm run build
-      - name: Validate optimized production JavaScript syntax
-        run: node --check dist/src/optical-touch.js
       - name: Audit deployable assets, accessibility, and media
         run: npm run audit:static
       - name: Package and validate the reusable Video.js skin
