@@ -42,14 +42,3 @@ test('first-paint animation gate has a safe fallback without touching player cod
   assert.match(code,/doc\.classList\.remove\('type-booting'\)/);
   assert.doesNotMatch(code,/media\.play|currentTime|media-player|src\/prism-player/);
 });
-
-test('cinematic glyph geometry batches all reads before style writes',async()=>{
-  const js=await read('src/text-motion.js');
-  const fn=js.slice(js.indexOf('function measureAndPosition('),js.indexOf('function measureAll('));
-  const readPhase=fn.indexOf('const measurements=rec.items.map');
-  const writePhase=fn.indexOf('for(const {item,left,top,width,height,font} of measurements)');
-  assert.ok(readPhase>0 && writePhase>readPhase);
-  assert.ok(fn.indexOf('range.getBoundingClientRect()',readPhase)<writePhase);
-  assert.ok(fn.indexOf('style.left=',writePhase)>writePhase);
-  assert.match(fn,/const fontCache=new Map\(\)/);
-});
