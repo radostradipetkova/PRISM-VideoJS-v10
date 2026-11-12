@@ -55,6 +55,15 @@ async def check(browser_type, name, url, reportdir):
         await page.locator('#player-a .prism-play').hover()
         assert 'Play video' in await hint.inner_text(), 'Initial Play hint missing'
         outcomes['contextual_control_hints_and_icon_only_playback']=True
+        # The Optical Scan owns the timeline hover surface. Its real loupe
+        # must not be covered by the generic control-help tooltip.
+        rail=page.locator('#player-a .prism-rail')
+        assert await rail.get_attribute('aria-label')=='Seek in video'
+        assert await rail.get_attribute('data-prism-hint') is None
+        await rail.hover()
+        assert await hint.is_hidden(), 'Timeline help covers the Optical Scan'
+        assert await page.locator('#player-a .prism-preview').count()==1
+        outcomes['optical_scan_timeline_has_no_competing_help_tooltip']=True
                 # Play real local MP4s (muted, avoiding autoplay restrictions).
         for ident in ('a','b'):
             selector=f'#player-{ident} video.prism-media'
