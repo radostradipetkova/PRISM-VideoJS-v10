@@ -29,3 +29,8 @@ The preview is served over HTTP; don't open `index.html` as `file://`.
 6. Confirm the public Mux playback ID and live-site URL are provided in the official Contra submission fields.
 
 Automated CI uses controlled media fixtures for some remote video operations. It does not substitute for testing real remote delivery, a physical phone, or assistive technology.
+
+
+## Deployment configuration check (12 November 2026)
+
+The public `prism-opticaldeck` site was checked and found to be serving an older build at the start of the polish pass. The repository now targets that exact Worker name in `wrangler.toml`. GitHub's CI uploads artifacts but **does not deploy Cloudflare**. Before claiming the website is updated, verify the Cloudflare Worker Builds Git connection or redeploy through an authorized Cloudflare session. See [deployment instructions](../PRISM-GITHUB-CLOUDFLARE-SETUP.md).

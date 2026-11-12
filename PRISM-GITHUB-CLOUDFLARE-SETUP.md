@@ -1,48 +1,48 @@
-# PRISM — GitHub → Cloudflare automatic deployment
+# PRISM — GitHub → Cloudflare deployment
 
-Repository: https://github.com/radostradipetkova/PRISM-VideoJS-v10
-New Cloudflare Worker: `prism-videojs-v10` (separate from existing `orange-grass-f8a7`)
+- **Repository:** https://github.com/radostradipetkova/PRISM-VideoJS-v10
+- **Production Worker:** `prism-opticaldeck`
+- **Public URL:** https://prism-opticaldeck.radostradi-pogo.workers.dev/
+- **Wrangler configuration:** `wrangler.toml`, using `name = "prism-opticaldeck"` and static assets from `./dist`
 
-## One-time initial source upload
+## Important difference: testing vs. deployment
 
-The attached GitHub-ready ZIP includes the complete PRISM source (including the most recent network-loading state update), project tests, and static media required for production. It excludes the generated `dist/`, temporary fixtures and local QA screenshots.
+GitHub Actions currently runs the PRISM release build, tests, and uploads a `prism-static-site` artifact. **That action does not publish the Cloudflare Worker.** A successful GitHub check cannot establish that the public URL is updated. Cloudflare must be connected separately to this repository or deployed with an authenticated Wrangler session.
 
-1. Extract the GitHub-ready ZIP to a new folder. The file `package.json` should appear directly inside that folder.
-2. Open PowerShell in that folder and run:
+## Recommended Cloudflare Workers Builds setup
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\PUSH-PRISM-TO-GITHUB.ps1
-```
+In the Cloudflare dashboard, select your **existing** `prism-opticaldeck` Worker and locate its Builds / Git integration settings. Connect `radostradipetkova/PRISM-VideoJS-v10`, branch `main`. Keep the current production Worker rather than creating a duplicate. Use:
 
-The script clones the target repository, copies the project files, and makes an initial commit. Git may ask you to sign in. The script does **not** deploy to Cloudflare or modify your existing live Worker.
+| Setting | Value |
+|---|---|
+| Repository | `radostradipetkova/PRISM-VideoJS-v10` |
+| Branch | `main` |
+| Root | repository root `/` |
+| Build | `npm test && npm run build` |
+| Deploy | `npx wrangler deploy` |
+| Worker | `prism-opticaldeck` |
 
-To verify:
+Save and initiate a deploy from the dashboard. The exact dashboard labels can change.
 
-```powershell
+Alternatively, after authenticating Wrangler for your own Cloudflare account, run locally:
+
+```bash
 git clone https://github.com/radostradipetkova/PRISM-VideoJS-v10.git
 cd PRISM-VideoJS-v10
-npm.cmd install
-npm.cmd test
-npm.cmd run build
+npm install
+npm test
+npm run build
+npx wrangler deploy
 ```
 
-## One-time Cloudflare setup
+Don't publish if tests fail. Do not put Cloudflare tokens or Mux private credentials into `wrangler.toml` or the repository. Deploying requires access to the existing Cloudflare account.
 
-After the complete PRISM project has appeared on GitHub, return to **Cloudflare Dashboard → Workers & Pages → Create → Import a repository**, choose `radostradipetkova/PRISM-VideoJS-v10`, and create the **new** Worker `prism-videojs-v10`, branch `main`. Do not deploy while the repository is still missing `package.json`.
+## Confirm the correct release is live
 
-Use:
+1. Check that Cloudflare's most recent deployed commit matches GitHub `main`.
+2. Open the exact public URL in an incognito browser.
+3. Check for the icon-only Playback control, hover/focus tooltips, quality selection for Mux and Live Action, and the updated Anatomy states.
+4. Inspect the public `/src/styles.css` to confirm it contains `PRISM 3.1 / ACCESSIBILITY SIGN-OFF`; this is an asset-version smoke check, not a full UI test.
+5. Test chapters, subtitles, fullscreen and the Optical Loupe on the deployed site.
 
-- **Root directory:** `/` (repository root)
-- **Build command:** `npm test && npm run build`
-- **Deploy command:** `npx wrangler deploy`
-- **Preview command:** leave Cloudflare default (if available)
-
-`wrangler.toml` names the **new** Worker `prism-videojs-v10` and points static assets to `./dist`. The existing `orange-grass-f8a7` Worker stays untouched. Change the name in both Cloudflare and `wrangler.toml` if you choose a different project name.
-
-## Future PRISM edits
-
-Once the source is in the repository, edits made through the connected GitHub integration can be committed directly. Every push to `main` triggers a Cloudflare build; failed build steps stop deployment. No ZIP patch workflow is needed for ordinary source edits.
-
-The local `assets/tears-of-steel-excerpt.mp4` is **not** included because the source film must be prepared separately. The current LIVE ACTION option uses an online fallback until `npm.cmd run prepare:film` is run and the optimized media is committed.
-
-**Note:** This GitHub-ready package does *not* activate Cloudflare Git integration by itself; creating the new GitHub-connected Worker requires your Cloudflare dashboard authorization.
+**Cloudflare Builds is not activated merely by committing this guide.** You must verify the Git integration in the Cloudflare dashboard. The existing GitHub Actions workflow will continue to test and upload artifacts independently.

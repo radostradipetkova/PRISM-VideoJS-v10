@@ -43,3 +43,9 @@ test('reusable skin documents its own hover hints and manual MP4 quality API',()
  assert.match(md,/control-hints\.js/);
  assert.match(md,/qualitySources/);
 });
+
+test('Worker deployment targets the public existing Worker, not the obsolete name',()=>{
+ assert.match(read('wrangler.toml'),/name = "prism-opticaldeck"/);
+ assert.match(read('PRISM-GITHUB-CLOUDFLARE-SETUP.md'),/GitHub Actions currently runs/);
+ assert.match(read('PRISM-GITHUB-CLOUDFLARE-SETUP.md'),/does not publish the Cloudflare Worker/);
+});

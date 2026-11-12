@@ -16,7 +16,7 @@ Deadline listed by [Contra](https://contra.com/community/topic/videojsskinschall
 ## Before clicking Submit
 
 - [ ] Open the exact public URL in an incognito desktop browser; confirm Cinematic Reel plays via Mux and Live Action plays via Blender media.
-- [ ] Check the latest commit's release checks and all three browser-engine CI results.
+- [ ] Check the latest commit's release checks and all three browser-engine CI results. Verify the Cloudflare Worker serves that same commit (GitHub Actions is not a deployment).
 - [ ] Repeat the Optical Loupe and Explore checks on the **deployed** code after this polish pass.
 - [ ] Check mobile layout, touch, focus, captions, reduced motion and browser console.
 - [ ] Add one strong screenshot or short clip showing the Optical Loupe and chapter navigation.

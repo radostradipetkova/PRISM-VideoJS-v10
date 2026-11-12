@@ -1,5 +1,5 @@
 # PRISM GitHub-connected Worker. Separate from the existing orange-grass-f8a7 site.
-name = "prism-videojs-v10"
+name = "prism-opticaldeck"
 compatibility_date = "2026-11-11"
 main = "./worker/index.js"
 

@@ -370,9 +370,9 @@ async def check(browser_type, name, url, reportdir):
             # after selecting a rendition. Reopen based on rendered state.
             if not await auto_choice.is_visible():
                 await speed_button.evaluate('(button)=>button.click()')
-            if not await auto_choice.is_visible():
-                await speed_button.evaluate('(button)=>button.click()')
-            await auto_choice.wait_for(state='visible',timeout=8000)
+            # Opening a Web Component menu is asynchronous. Clicking a
+            # second time before visibility changes would CLOSE it again.
+            await auto_choice.wait_for(state='visible',timeout=12000)
             await auto_choice.evaluate('(item)=>item.click()')
             await page.wait_for_function("""() => {
                 const group=document.querySelector('#prism-mount .prism-quality-group');

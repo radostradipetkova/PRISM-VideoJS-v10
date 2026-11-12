@@ -1,6 +1,6 @@
-> **Deployment note (11 November 2026):** The complete PRISM source is now on `main`. Cloudflare Workers Builds should run `npm test && npm run build`, then `npx wrangler deploy`, targeting `prism-videojs-v10` through `wrangler.toml`.
-
-> **GitHub + Cloudflare:** This repository is prepared for automatic deployments to a **new, separate** Cloudflare Worker named `prism-videojs-v10`. See [PRISM-GITHUB-CLOUDFLARE-SETUP.md](PRISM-GITHUB-CLOUDFLARE-SETUP.md) for the one-time connection and build settings.
+> **Public showcase:** [PRISM — Optical Deck](https://prism-opticaldeck.radostradi-pogo.workers.dev/) · **Source:** [GitHub main](https://github.com/radostradipetkova/PRISM-VideoJS-v10)
+>
+> **Deployment note (12 November 2026):** `wrangler.toml` targets the existing `prism-opticaldeck` Worker. GitHub Actions tests/builds code but does not deploy the Worker. Cloudflare's own Git integration or an authenticated `wrangler deploy` is required. Follow the [deployment checklist](PRISM-GITHUB-CLOUDFLARE-SETUP.md) and verify the public URL matches the latest commit.
 
 ## New optional live-action showcase film
 
@@ -28,17 +28,17 @@ The original competition showcase remains in `index.html`.
 
 ---
 
-> **Latest audit (9 November 2026):** See [FINAL-ACCESSIBILITY-AUDIT.md](./docs/ACCESSIBILITY-VERIFICATION.md) for results, fixes, and remaining manual screen-reader checks.
+> **Accessibility audit:** See the [current accessibility verification and remaining manual checks](./docs/ACCESSIBILITY-VERIFICATION.md).
 
-# PRISM 2.2 — Universal Video Fit
+# Video Fit and Optical Navigation
 
-**The video cropping issue is fixed.** Widescreen, square and portrait sources now use a crop-free `contain` fit over a soft graphite optical matte, without changing the stable player shell or width-slider behavior. See [media-fit decision, three-option comparison, and tests](PRISM-VIDEO-FIT-DECISION.md). All previous Optical Touch and Adaptive Optical Index features are included.
+**The video cropping issue is fixed.** Widescreen, square and portrait sources now use a crop-free `contain` fit over a soft graphite optical matte, without changing the stable player shell or width-slider behavior. See the [portable skin documentation](skin/README.md) for the Fit/Fill setting and related CSS variables. All previous Optical Touch and Adaptive Optical Index features are included.
 
 ---
 
-# PRISM 2.0 — OPTICAL TOUCH
+# Optical Touch — reusable player
 
-See [PRISM 2.0 release notes](PRISM-2-OPTICAL-TOUCH-RELEASE.md) for the five new features, installation, tests and limits. This is a separate test build; PRISM v1 remains live until you deploy v2.
+The Optical Loupe, chapter index, gestures, captions, hover/focus hints, manual and adaptive quality controls, and keyboard guide are included in the current [portable skin](skin/README.md). See the [release-verification notes](./docs/RELEASE-VALIDATION.md) for independently run browser tests.
 
 # PRISM — Optical Deck + Cinematic Showcase
 
@@ -92,19 +92,19 @@ npm.cmd run test:browser
 - `screenshots/cinematic-contact-sheet.jpg`: video frames at eight timestamps
 - `tests/cinematic_chapters_browser.py`: independent real-media browser test (not a Video.js test)
 - `CINEMATIC-SCENE-GUIDE.md`: scenes, timestamps and testing rationale
-- `DEPLOYMENT-GUIDE.md`, `PUBLIC-LAUNCH-CHECKLIST.md`, `DEPLOY-CLOUDFLARE.bat`: Cloudflare Pages deployment
+- [Cloudflare Workers deployment guide](PRISM-GITHUB-CLOUDFLARE-SETUP.md): existing production Worker and Git integration verification
 
 ## Publish
 
-Run `npm.cmd run build`, then upload the content of `dist/` to Cloudflare Pages. Or double-click `DEPLOY-CLOUDFLARE.bat` and authenticate with your own Cloudflare account. No public URL is claimed in this ZIP. The user-provided public Mux playback ID is configured by default for Cinematic Reel. Its HLS master manifest returned HTTP 200, but real Video.js streaming and captions still need Chrome verification before a bonus claim.
+Run `npm test && npm run build` for the site artifacts, or `npm run build:skin` for the standalone skin. The existing Cloudflare Worker is `prism-opticaldeck`. GitHub Actions validates and packages code but does **not** publish it: link the Worker to the GitHub repository or deploy with an authenticated Wrangler session. Confirm that the public URL actually serves the current commit. Mux playback and captions have been browser-tested; check the newly deployed version before submitting.
 
 Video.js runtime/API integration depends on genuine v10.3.0 modules. Do not use the file directly via `file://`; serve the site from a local or public HTTP server.
 
-See `QA-REPORT.md` for verification evidence and limitations. See `ASSET-PROVENANCE.md` for copyright/asset notes.
+See [release evidence and its limitations](./docs/RELEASE-VALIDATION.md) and [Mux playback information](./docs/MUX-STREAMING.md). The reusable skin source is Apache-2.0; individual demo media retain their respective licenses.
 
 ## Public launch verification (new)
 
-`VERIFY-PRISM-LIVE.bat` checks a real published HTTPS URL for the website, Video.js skin source, caption track and ranged MP4 delivery. This is a **network preflight only**, not proof of end-to-end Video.js control functionality. See `PUBLIC-LAUNCH-CHECKLIST.md` and run the actual `?qa=1` controls test in Chrome. The production package includes a minimal Cloudflare Pages `_headers` file to set cache lifetime and basic safety headers without restricting fullscreen or PiP.
+`VERIFY-PRISM-LIVE.bat` checks basic HTTPS, skin and media delivery. This is a **network preflight only**, not proof of end-to-end controls. See the [public deployment verification steps](PRISM-GITHUB-CLOUDFLARE-SETUP.md) and the [submission checklist](./docs/SUBMISSION-CHECKLIST.md).
 
 ## Cinematic character typography (new)
 
@@ -116,7 +116,7 @@ Run the typography-only Chromium test with `python tests/text_motion_browser.py`
 
 ### Legibility and touch-friendly controls (November 2026)
 
-The latest edition increases small labels, timecodes, chapter buttons, and control targets throughout the existing Optical Deck without changing Video.js components. All actionable transport buttons and the timeline have 44px minimum hit areas. Very narrow (≤330px) player containers present an unobstructed 16:9 video stage above a separate two-row control deck. See [`LEGIBILITY-UPDATE.md`](./docs/ACCESSIBILITY-VERIFICATION.md) for details and Chromium checks.
+The latest edition improves small labels, timecodes, chapter buttons and control targets while preserving real Video.js controls. Player widths up to 600px use an unobstructed video stage above a two-row transport; extremely narrow embeds use an adapted secondary-control grid. See the [accessibility verification notes](./docs/ACCESSIBILITY-VERIFICATION.md) for tested widths and remaining manual checks.
 
 ## Keyboard shortcuts (showcase-wide Space fix — 10 November 2026)
 
@@ -171,7 +171,7 @@ See [`A11Y-SIGNOFF.md`](./docs/ACCESSIBILITY-VERIFICATION.md) for the verified k
 
 
 ## Release verification (v2.3.1)
-See [`RELEASE-QUALITY-REPORT.md`](./docs/RELEASE-VALIDATION.md) for verified browser/server checks, resolved bright-footage and buffering issues, and the outstanding Firefox/WebKit and new public staging sign-offs. The real-engine CI workflow is `.github/workflows/release-crossbrowser.yml`.
+See the [current release-verification report](./docs/RELEASE-VALIDATION.md) for verified browser checks, quality switching, and outstanding physical-device/public-deployment sign-offs. The three-engine CI workflow is `.github/workflows/release-crossbrowser.yml`.
 
 ### Fit / Fill — Video Fit
 
