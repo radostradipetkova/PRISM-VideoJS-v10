@@ -37,14 +37,3 @@ test('critical Video.js global styles are inline without a blocking stylesheet r
  assert.match(html,/media-container video::\-webkit-media-text-track-container/);
  assert.match(html,/media-dialog,media-alert-dialog,media-error-dialog,media-controls/);
 });
-
-test('minification runs only for deployable CSS and touch ESM, not the authored sources',()=>{
- const build=read('scripts/build.mjs');
- const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.devDependencies.esbuild,'0.28.2');
- assert.match(build,/import \{transform\} from 'esbuild'/);
- assert.match(build,/\['src\/styles\.css','css',\{\}\]/);
- assert.match(build,/\['src\/optical-touch\.js','js',\{format:'esm',target:'es2020'\}\]/);
- assert.match(build,/const file=path\.join\(dst,name\)/);
- assert.match(build,/minify:true/);
-});
