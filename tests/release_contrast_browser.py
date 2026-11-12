@@ -20,7 +20,7 @@ def contrast(a,b):
 async def main():
     outcomes=[]
     async with async_playwright() as p:
-        browser=await p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+        browser=await p.chromium.launch(headless=True,args=['--no-sandbox'])
         for w in (320,390,768,1280):
             for bright in (False,True):
                 page=await browser.new_page(viewport={'width':w,'height':800},device_scale_factor=1)
