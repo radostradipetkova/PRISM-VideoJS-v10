@@ -584,6 +584,21 @@ async def check(browser_type, name, url, reportdir):
               return v?.src.includes('-720.mp4') && v.readyState>=1 && Math.abs(v.currentTime-51)<.6;
             }""",timeout=16000)
             outcomes['liveaction_quality_returns_to_default_720p']=True
+        # A user without JavaScript must not see a blank media stage.
+        # This exercises the actual HTML document in a no-script browser,
+        # not just a string check against source markup.
+        nojs=await browser.new_context(java_script_enabled=False,viewport={'width':880,'height':640})
+        try:
+            nojs_page=await nojs.new_page()
+            response=await nojs_page.goto(url+'/',wait_until='domcontentloaded',timeout=25000)
+            assert response.status==200
+            fallback=nojs_page.locator('.prism-noscript')
+            await fallback.wait_for(state='visible',timeout=10000)
+            assert await fallback.locator('img[src="./assets/prism-cinematic.jpg"]').count()==1, 'No static poster'
+            assert await fallback.locator('a[href="./assets/prism-cinematic.mp4"]').count()==1, 'No fallback film'
+            outcomes['javascript_disabled_poster_and_media_fallback']=True
+        finally:
+            await nojs.close()
         outcomes.pop('phase',None)
     except Exception as e:
         outcomes['FAILURE']=f'{type(e).__name__}: {e!r}'
