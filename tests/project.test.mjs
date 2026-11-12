@@ -10,7 +10,8 @@ const read=async f => readFile(path.join(root,f),'utf8');
 test('official Video.js v10.3.0 CDN source and UI registration are pinned',async()=>{
  const html=await read('index.html');
  assert.match(html,/@videojs\/cdn@10\.3\.0\/video\.js/);
- assert.match(html,/@videojs\/cdn@10\.3\.0\/global\.css/);
+ assert.match(html,/Version-pinned Video\.js 10\.3\.0 global\.css/);
+ assert.match(html,/<style>@property --media-slider-fill/);
  const urls=[...html.matchAll(/https:\/\/cdn\.jsdelivr\.net\/npm\/@videojs\/cdn@([^/"\s]+)/g)].map(m=>m[1]);
  assert.ok(urls.length>=4);
  assert.deepEqual(new Set(urls),new Set(['10.3.0']));
