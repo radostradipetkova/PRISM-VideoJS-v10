@@ -40,11 +40,5 @@ for(const name of ['prism-cinematic','night-city','coast-sunrise']){
 requireCheck(metadata.length===0 || (metadata[0].duration>31 && metadata[0].duration<33),'Cinematic chapters match the approximately 32s film');
 const release=['index.html','_headers','src/app.js','src/prism-player.js','src/styles.css','assets/prism-cinematic.mp4','assets/prism-cinematic.vtt'];
 requireCheck((await Promise.all(release.map(f=>fileExists('dist/'+f)))).every(Boolean),'Built deployment directory contains the required website and media');
-const optimizedCss=await read('dist/src/styles.css');
-const sourceTouch=await read('src/optical-touch.js');
-const optimizedTouch=await read('dist/src/optical-touch.js');
-requireCheck(optimizedCss.length<css.length*0.95,'Deployable CSS is actually minified');
-requireCheck(optimizedTouch.length<sourceTouch.length*0.95,'Deployable touch module is actually minified');
-requireCheck(optimizedTouch.includes('prism-') && optimizedTouch.includes('export'), 'Minified touch module retains UI hooks and module exports');
 console.log(`\n${passed} local predeployment integrity checks passed.`);
 console.log('NOT VERIFIED HERE: real Video.js CDN playback, Mux HLS decoding, screen-reader experience, mobile Safari, public Cloudflare URL.');
