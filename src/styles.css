@@ -1756,3 +1756,30 @@
 .prism-skin.minimal-motion *,
 .prism-skin.minimal-motion *::before,
 .prism-skin.minimal-motion *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+
+/* PageSpeed sign-off: readable labels while preserving PRISM's palette.
+   Avoid opacity-reduced text: it fails AA over the copper and graphite cards. */
+.prism-demo-label{color:#983e28}
+.prism-demo-hint{color:#4a4942}
+.chapter-bar button span{color:#983e28}
+.chapter-bar button small{opacity:1;color:#47453f}
+.chapter-bar button[aria-current="true"] small{color:#f7efe2}
+.feature-card-head span:last-child{opacity:1}
+.rail-card .feature-card-head,
+.rail-card .feature-demo-feedback{color:#f8eee3}
+.aperture-card .feature-card-head,
+.aperture-card .aperture-demo-state,
+.aperture-card .feature-card-bottom p{color:#111110}
+.access-card .feature-card-head,
+.access-card .access-demo-instruction{color:#28231f}
+
+/* The player is mounted asynchronously; reserve its mobile picture + dock
+   before the first frame so Explore the Film does not jump downward. */
+@media (max-width:600px){
+  .player-size-stage{
+    min-height:calc((100vw - 30px) * 9 / 16 + 112px);
+  }
+  .player-wrap{
+    min-height:calc((100vw - 30px) * 9 / 16 + 112px);
+  }
+}
