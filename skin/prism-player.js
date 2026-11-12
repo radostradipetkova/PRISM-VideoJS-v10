@@ -6,6 +6,7 @@ import {initSceneLoop} from './scene-loop.js';
 import {DEFAULT_REMEMBER_KEY,safeStorage,readRememberedSettings,saveRememberedSettings,clearRememberedSettings,normalizePlaybackRate} from './remember-settings.js';
 import {normalizeChapters} from './chapter-index.js';
 import {initControlHints} from './control-hints.js';
+import {initVanishingInterface} from './vanishing-interface.js';
 /** PRISM — reusable HTML custom-element skin for genuine Video.js v10.
  * Requires @videojs/cdn@10.3.0/video.js (or equivalent @videojs/html package
  * registrations) before mounting. The media itself is the state source.
@@ -98,6 +99,11 @@ export function mountPrismPlayer(target, options={}) {
           </media-play-button>
           <button class="prism-explore-launch" data-prism-hint="Explore video chapters" type="button" aria-haspopup="dialog" aria-label="Explore the video chapters" hidden aria-expanded="false"><span aria-hidden="true"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span> EXPLORE</button>
           <div class="prism-gesture-feedback" aria-hidden="true"></div>
+          <div class="prism-volume-scale" aria-hidden="true">
+            <span class="prism-volume-scale-title">VOL / OPTICAL</span>
+            <span class="prism-volume-scale-value">100%</span>
+            <span class="prism-volume-scale-track"><i></i></span>
+          </div>
           <div class="prism-bottom">
             <div class="prism-dock">
               <div class="prism-dock-header" aria-hidden="true">
@@ -458,6 +464,7 @@ export function mountPrismPlayer(target, options={}) {
   const player = target.querySelector('video-player');
   const skin = target.querySelector('.prism-skin');
   const controlHints=initControlHints({skin,media:mediaElement});
+  const vanishingInterface=initVanishingInterface({skin,media:mediaElement});
   // Escape dismisses a Tab-focused control's outline when no overlay is
   // active. Keep native Video.js menus, PRISM dialogs and fullscreen first.
   // Capture lets this work on Web Components that stop bubbling key events.
@@ -580,6 +587,7 @@ export function mountPrismPlayer(target, options={}) {
     destroy(){
     sceneLoop.destroy();
     controlHints.destroy();
+    vanishingInterface.destroy();
     nativeQualitySection?.removeEventListener('click',onNativeQualityClick);
     mediaElement.removeEventListener('loadedmetadata',onNativeQualityMetadata);
     mediaElement.removeEventListener('error',onNativeQualityError);
