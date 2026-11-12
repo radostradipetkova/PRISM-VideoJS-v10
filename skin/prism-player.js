@@ -36,9 +36,19 @@ export function mountPrismPlayer(target, options={}) {
   const { src='', poster='',
     title='Untitled video', eyebrow='PRISM / OPTICAL PLAYER', captions=null,
     captionLabel='English / descriptive', captionLang='en', captionsDefault=false,
-    muxPlaybackId=null, muted=false, chapters=[], chaptersVtt=null, chapterMode='auto', storyboard=null,
+    muxPlaybackId=null, qualitySources=[], muted=false, chapters=[], chaptersVtt=null, chapterMode='auto', storyboard=null,
     autoRotateFullscreen=true, preferences={}, playbackRate=null, preferencesStorageKey=DEFAULT_REMEMBER_KEY } = options;
   if (muxPlaybackId && !/^[A-Za-z0-9]+$/.test(muxPlaybackId)) throw new Error('Invalid public Mux playback ID');
+  // Separate MP4 encodes can only switch quality by changing sources.
+  // Never misrepresent a plain MP4 as a Mux-like adaptive Auto stream.
+  const nativeQualitySources = !muxPlaybackId && Array.isArray(qualitySources) ?
+    qualitySources.filter(item=>item && typeof item.label==='string' &&
+      typeof item.src==='string' && /^https?:\/\//i.test(item.src) &&
+      /^\d{3,4}p$/.test(item.label)) : [];
+  const nativeQualityEnabled=nativeQualitySources.length>1;
+  let selectedNativeQuality=nativeQualitySources.findIndex(item=>item.src===src);
+  if(selectedNativeQuality<0)selectedNativeQuality=0;
+
   if (!src && !muxPlaybackId) throw new Error('PRISM requires src or muxPlaybackId to play a video');
   target.classList.add('prism-mount');
   const uid = `prism-${Math.random().toString(36).slice(2,9)}`;
@@ -124,7 +134,7 @@ export function mountPrismPlayer(target, options={}) {
                 <media-mute-button class="prism-control prism-mute">${state('mute-state',icon.mute,icon.sound)}</media-mute-button>
                 <media-volume-slider class="prism-volume" step="5" aria-label="Volume"><media-slider-track><media-slider-fill></media-slider-fill></media-slider-track><media-slider-thumb></media-slider-thumb></media-volume-slider>
                 <div class="prism-separator" aria-hidden="true"></div>
-                <button class="prism-control prism-settings-trigger" type="button" commandfor="${rateMenu}" aria-label="${muxPlaybackId?'Playback speed and quality':'Playback speed'}" title="${muxPlaybackId?'Playback speed and quality':'Playback speed'}">${icon.speed}<span class="prism-text-caption">${muxPlaybackId?'PLAYBACK':'SPEED'}</span></button>
+                <button class="prism-control prism-settings-trigger" type="button" commandfor="${rateMenu}" aria-label="${muxPlaybackId||nativeQualityEnabled?'Playback speed and quality':'Playback speed'}" title="${muxPlaybackId||nativeQualityEnabled?'Playback speed and quality':'Playback speed'}">${icon.speed}<span class="prism-text-caption">${muxPlaybackId||nativeQualityEnabled?'PLAYBACK':'SPEED'}</span></button>
                 <media-menu id="${rateMenu}" class="prism-menu" side="top" align="end">
                   <media-menu-content><div class="prism-menu-title">PLAYBACK RATE</div><media-playback-rate-radio-group aria-label="Playback speed"><template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template></media-playback-rate-radio-group>
                     ${muxPlaybackId ? `<section class="prism-quality-section" aria-label="Video quality settings">
@@ -132,6 +142,12 @@ export function mountPrismPlayer(target, options={}) {
                       <media-quality-radio-group class="prism-quality-group" label="Video quality">
                         <template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><span data-part="tier" class="prism-quality-tier"></span><span data-part="badge" class="prism-quality-badge"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template>
                       </media-quality-radio-group>
+                    </section>` : nativeQualityEnabled ? `<section class="prism-quality-section prism-quality-native" aria-label="Video quality settings">
+                      <div class="prism-menu-title prism-quality-title">VIDEO QUALITY</div>
+                      <div class="prism-native-quality-options" role="group" aria-label="Video quality">
+                        ${nativeQualitySources.map((choice,index)=>`<button type="button" class="prism-menu-item prism-quality-option" data-prism-quality-index="${index}" aria-pressed="${index===selectedNativeQuality?'true':'false'}"><span>${escapeHTML(choice.label)}</span><span class="prism-quality-check" aria-hidden="true">◆</span></button>`).join('')}
+                      </div>
+                      <p class="prism-quality-status" role="status" aria-live="polite" data-quality-status>Manual quality · playback position preserved.</p>
                     </section>` : ''}</media-menu-content>
                 </media-menu>
                 ${hasCaptions ? `<button class="prism-control prism-settings-trigger prism-captions-trigger" type="button" commandfor="${ccMenu}" aria-label="Caption tracks and settings">${icon.captions}</button>
@@ -297,6 +313,84 @@ export function mountPrismPlayer(target, options={}) {
   // <track>.track and readyState do not represent the active rendered cues.
   // Use the media adapter's actual textTracks for both Mux and native video.
   const mediaElement = target.querySelector('.prism-media');
+  // MP4 quality switch: same Video.js player and video element, so the
+  // Optical Loupe, chapter timeline, loop state and control handlers survive.
+  const nativeQualitySection=target.querySelector('.prism-quality-native');
+  const nativeQualityStatus=nativeQualitySection?.querySelector('[data-quality-status]');
+  let qualityTransition=null;
+  function markNativeQuality(index){
+    selectedNativeQuality=index;
+    nativeQualitySection?.querySelectorAll('[data-prism-quality-index]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(Number(button.dataset.prismQualityIndex)===index));
+    });
+  }
+  function captureQualityPlayback(){
+    return {
+      time:Number.isFinite(mediaElement.currentTime)?mediaElement.currentTime:0,
+      playing:!mediaElement.paused&&!mediaElement.ended,
+      volume:mediaElement.volume,muted:mediaElement.muted,
+      rate:mediaElement.playbackRate,
+      captions:[...(mediaElement.textTracks||[])].map(track=>({kind:track.kind,lang:track.language,mode:track.mode}))
+    };
+  }
+  function restoreQualityPlayback(snapshot){
+    if(!snapshot)return;
+    if(Number.isFinite(snapshot.rate))mediaElement.playbackRate=snapshot.rate;
+    if(Number.isFinite(snapshot.volume))mediaElement.volume=snapshot.volume;
+    mediaElement.muted=snapshot.muted;
+    const duration=Number(mediaElement.duration);
+    const position=Number.isFinite(duration)?Math.min(snapshot.time,Math.max(0,duration-.15)):snapshot.time;
+    try{mediaElement.currentTime=position;}catch{}
+    // Preserve an explicit captions-off choice as well as captions-on.
+    const tracks=[...(mediaElement.textTracks||[])];
+    for(let i=0;i<snapshot.captions.length;i++){
+      const prior=snapshot.captions[i];
+      const track=tracks.find(t=>t.kind===prior.kind && t.language===prior.lang) || tracks[i];
+      if(track)track.mode=prior.mode;
+    }
+    if(snapshot.playing)mediaElement.play().catch(()=>{});
+  }
+  function onNativeQualityMetadata(){
+    const transition=qualityTransition;
+    if(!transition)return;
+    qualityTransition=null;
+    restoreQualityPlayback(transition.snapshot);
+    if(nativeQualityStatus)nativeQualityStatus.textContent=`${nativeQualitySources[selectedNativeQuality]?.label} selected · position preserved.`;
+  }
+  function onNativeQualityError(){
+    const transition=qualityTransition;
+    if(!transition)return;
+    qualityTransition=null;
+    // Recover the already working stream if a higher/lower encode fails.
+    markNativeQuality(transition.previousIndex);
+    if(nativeQualityStatus)nativeQualityStatus.textContent='Quality unavailable. Restoring previous stream.';
+    mediaElement.src=transition.previousSrc;
+    mediaElement.addEventListener('loadedmetadata',function restored(){
+      mediaElement.removeEventListener('loadedmetadata',restored);
+      restoreQualityPlayback(transition.snapshot);
+    },{once:true});
+    mediaElement.load();
+  }
+  function onNativeQualityClick(event){
+    const button=event.target.closest?.('[data-prism-quality-index]');
+    if(!button || !nativeQualitySection?.contains(button))return;
+    const index=Number(button.dataset.prismQualityIndex);
+    const candidate=nativeQualitySources[index];
+    if(!candidate || index===selectedNativeQuality)return;
+    const previousSrc=mediaElement.getAttribute('src');
+    if(!previousSrc)return;
+    const snapshot=qualityTransition?.snapshot||captureQualityPlayback();
+    qualityTransition={snapshot,previousSrc,previousIndex:selectedNativeQuality};
+    markNativeQuality(index);
+    if(nativeQualityStatus)nativeQualityStatus.textContent=`Loading ${candidate.label}…`;
+    mediaElement.src=candidate.src;
+    mediaElement.load();
+  }
+  nativeQualitySection?.addEventListener('click',onNativeQualityClick);
+  if(nativeQualityEnabled){
+    mediaElement.addEventListener('loadedmetadata',onNativeQualityMetadata);
+    mediaElement.addEventListener('error',onNativeQualityError);
+  }
   const captionMenu=target.querySelector('.prism-captions-menu');
   const captionTrigger=target.querySelector('.prism-captions-trigger');
   const captionStatus=captionMenu?.querySelector('[data-caption-track-status]');
@@ -483,6 +577,9 @@ export function mountPrismPlayer(target, options={}) {
     isRememberingSettings(){return rememberEnabled;},
     destroy(){
     sceneLoop.destroy();
+    nativeQualitySection?.removeEventListener('click',onNativeQualityClick);
+    mediaElement.removeEventListener('loadedmetadata',onNativeQualityMetadata);
+    mediaElement.removeEventListener('error',onNativeQualityError);
     skin.removeEventListener('keydown',clearTabFocusOnEscape,true);
     mediaElement.removeEventListener('ratechange',onRateChange);
     mediaElement.removeEventListener('loadedmetadata',restorePlaybackRate);

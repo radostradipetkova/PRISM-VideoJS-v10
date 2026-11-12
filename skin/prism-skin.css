@@ -1330,3 +1330,23 @@
 .prism-skin .prism-quality-tier{margin-left:4px;font-size:10px;color:#805039}
 .prism-skin .prism-quality-badge{margin-left:auto;font-size:10px;font-weight:700}
 .prism-skin .prism-quality-group .prism-menu-item{min-height:44px}
+
+/* PRISM 2.9 — honest MP4 quality selection for Blender Live Action */
+.prism-skin .prism-native-quality-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.prism-skin .prism-quality-option{
+  display:flex;align-items:center;justify-content:space-between;min-width:0;
+  min-height:44px;padding:9px 11px;border:1px solid rgba(40,40,35,.2);
+  background:transparent;color:#292522;font:700 12px/1.35 'Courier New',monospace;
+  cursor:pointer;
+}
+.prism-skin .prism-quality-option[aria-pressed="true"]{
+  background:#e6d2bd;border-color:#a75b39;color:#653319;
+}
+.prism-skin .prism-quality-option .prism-quality-check{visibility:hidden;color:#924423}
+.prism-skin .prism-quality-option[aria-pressed="true"] .prism-quality-check{visibility:visible}
+.prism-skin .prism-quality-option:focus-visible{outline:3px solid #934a2a;outline-offset:1px}
+.prism-skin .prism-quality-status{color:#805039;font-size:11px;line-height:1.4;margin:9px 3px 2px}
+@container (max-width:360px){
+  .prism-skin .prism-native-quality-options{gap:3px}
+  .prism-skin .prism-quality-option{min-height:44px;padding:9px 7px}
+}

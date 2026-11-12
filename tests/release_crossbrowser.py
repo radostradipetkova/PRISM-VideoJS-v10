@@ -508,6 +508,34 @@ async def check(browser_type, name, url, reportdir):
                 outcomes['liveaction_timestamp_checks'].append(
                   {'time':when,'expected':expected,'passed':True})
             outcomes['liveaction_captions_beyond_39_seconds']=True
+            # Real Blender offers separate MP4 files, not an adaptive stream.
+            # Switch resolution on the *same* native Video.js video element
+            # and verify that playhead and WebVTT survive reloading its source.
+            outcomes['phase']='Live Action MP4 manual quality / 480p + 720p'
+            nativeQuality=page.locator('#prism-mount .prism-quality-native')
+            await nativeQuality.wait_for(state='attached',timeout=10000)
+            assert await nativeQuality.locator('[data-prism-quality-index]').count()==5
+            speedTrigger=page.locator('#prism-mount .prism-settings-trigger[aria-label="Playback speed and quality"]')
+            await speedTrigger.click()
+            await nativeQuality.locator('[data-prism-quality-index="2"]').click()
+            await page.wait_for_function("""() => {
+              const v=document.querySelector('#prism-mount video.prism-media');
+              return v?.src.includes('-480.mp4') && v.readyState>=1 && Math.abs(v.currentTime-51)<.6;
+            }""",timeout=16000)
+            assert await nativeQuality.locator('[data-prism-quality-index="2"]').get_attribute('aria-pressed')=='true'
+            await page.wait_for_function("""() => {
+              const v=document.querySelector('#prism-mount video.prism-media');
+              return [...(v?.textTracks||[])].some(t=>t.kind==='captions' && t.mode==='showing' && [...(t.activeCues||[])].some(c=>/memory synced/i.test(c.text)));
+            }""",timeout=12000)
+            outcomes['liveaction_480p_preserves_playhead_and_captions']=True
+            if not await speedTrigger.get_attribute('aria-expanded')=='true':
+                await speedTrigger.click()
+            await nativeQuality.locator('[data-prism-quality-index="1"]').click()
+            await page.wait_for_function("""() => {
+              const v=document.querySelector('#prism-mount video.prism-media');
+              return v?.src.includes('-720.mp4') && v.readyState>=1 && Math.abs(v.currentTime-51)<.6;
+            }""",timeout=16000)
+            outcomes['liveaction_quality_returns_to_default_720p']=True
         outcomes.pop('phase',None)
     except Exception as e:
         outcomes['FAILURE']=f'{type(e).__name__}: {e!r}'
