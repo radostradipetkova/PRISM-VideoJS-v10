@@ -132,3 +132,25 @@ via the `preferences` mount argument override the saved values for those fields.
 Open **Player Settings → 09 / Video Fit**. **Fit** (the default) uses `object-fit: contain` to preserve the entire video including square and portrait footage. **Fill** uses `object-fit: cover` and crops as necessary to fill the video area. Neither mode changes the player geometry, chapter markers, captions, or playback. The same preference applies to native HTML `<video>` and exported Mux video parts. An embedding site can pass `preferences: { videoFit: 'fill' }` to choose Fill initially, or use the existing `--media-object-fit: cover` token when the viewer has no explicit choice. Once a viewer chooses a mode, that choice takes priority for the mounted player.
 
 When **Remember My Settings** is on, the mode is saved along with other appearance preferences; otherwise it lasts only for the current session. Real 16:9, 4:3, 3:4, 9:16 and 1:1 H.264 fixtures are regression-tested in the complete repository under `tests/video_fit_controls_browser.py`.
+
+
+## Moment Stamp — optional for embedded players
+
+The pause-only Moment Stamp control is **disabled by default for other websites**, because an embed cannot assume that its host understands PRISM's `?t=` link format. Enable it by supplying a `momentLink` callback when mounting:
+
+```js
+import {mountPrismPlayer, parseMomentSeconds, restoreMomentToMedia} from './skin/index.js';
+const player=mountPrismPlayer(mount,{
+  src:'/my-video.mp4',
+  momentLink:seconds=>{
+    const url=new URL(location.href);
+    url.searchParams.set('t',String(Math.round(seconds*100)/100));
+    return url.toString();
+  }
+});
+const seconds=parseMomentSeconds(new URLSearchParams(location.search).get('t'));
+const cancelMoment=seconds===null?()=>{}:restoreMomentToMedia(player.media,seconds);
+// If remounting or removing the player, call cancelMoment() before player.destroy().
+```
+
+The host is responsible for preserving its **video identity** in the returned link (for example, a slug or content ID). PRISM does not invent a share URL or expose a non-functional button when the callback is omitted. `restoreMomentToMedia` waits for metadata/seekable ranges and does not autoplay, making it suitable for MP4 and Mux playback.
