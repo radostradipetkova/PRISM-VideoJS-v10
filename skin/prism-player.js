@@ -119,7 +119,7 @@ export function mountPrismPlayer(target, options={}) {
                 <span class="prism-dock-state"><i></i><span class="prism-transport-state">STANDBY</span></span>
               </div>
             <div class="prism-rail-meta" aria-hidden="true"><span>00</span><span class="prism-rail-code">PRISM PRECISION RAIL <span class="prism-rail-arrow">↔</span> DRAG TO SEEK</span><span>END</span></div>
-            <media-time-slider class="prism-rail" data-prism-hint="seek" step="1" large-step="10" thumb-alignment="edge" aria-label="Seek in video" aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight">
+            <media-time-slider class="prism-rail" step="1" large-step="10" thumb-alignment="edge" aria-label="Seek in video" aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight">
               <media-slider-track class="prism-rail-track">
                 <media-slider-buffer class="prism-buffer"></media-slider-buffer>
                 <media-slider-fill class="prism-fill"></media-slider-fill>
