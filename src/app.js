@@ -13,40 +13,31 @@ const mount=document.querySelector('#prism-mount');
 // A real public open movie provides an immediate optional demo. Running
 // `npm run prepare:film` upgrades it to the self-hosted 65-second excerpt,
 // with exact captions and storyboard tiles for the Optical Loupe.
-// Full-film storyboard is prepared once by the GitHub asset-generation job.
-// Never claim the remote MP4 has a storyboard until the VTT actually exists.
-const fullFilmStoryboard='./assets/tears-of-steel-full-storyboard.vtt';
-// Never block LIVE ACTION indefinitely if a hosting provider stalls on HEAD.
-const liveAssetCheckAbort=new AbortController();
-const liveAssetCheckTimeout=setTimeout(()=>liveAssetCheckAbort.abort(),6000);
-// Both assets must exist. A successful VTT HEAD alone is not proof that the
-// actual frame sprite is deployed (and a 200 HTML fallback is not a storyboard).
-const fullFilmStoryboardProbe=Promise.all([
- fetch(fullFilmStoryboard,{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal}),
- fetch('./assets/tears-of-steel-full-storyboard.jpg',{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal})
-]).then(([vtt,sprite])=>{
-  const valid= [vtt,sprite].every(response=>response.ok &&
-    !(response.headers.get('content-type')||'').toLowerCase().includes('text/html'));
-  if(valid && films.liveaction.src.startsWith('https://video.blender.org/'))
-    films.liveaction.storyboard=fullFilmStoryboard;
-  return valid;
-}).catch(()=>false);
+// Optional media is declared by the release build, rather than probing
+// missing MP4/VTT/JPG URLs (404 requests pollute browser diagnostics).
 const filmCredit=document.querySelector('#prism-film-credit');
 const filmCutStatus=document.querySelector('#prism-film-cut-status');
-const liveActionExcerptProbe=Promise.all([
- fetch('./assets/tears-of-steel-excerpt.mp4',{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal}),
- fetch('./assets/tears-of-steel-excerpt.vtt',{method:'HEAD',cache:'no-store',signal:liveAssetCheckAbort.signal})
-]).then(([response,subtitles])=>{
- if(response.ok && (response.headers.get('content-type')||'').toLowerCase().includes('video/') &&
-    subtitles.ok && (subtitles.headers.get('content-type')||'').toLowerCase().includes('text/vtt')){
-  if(!new URLSearchParams(location.search).has('liveMux'))films.liveaction={captionsDefault:true,src:'./assets/tears-of-steel-excerpt.mp4',poster:'./assets/tears-of-steel-poster.jpg',captions:'./assets/tears-of-steel-excerpt.vtt',captionLabel:'English / excerpt',title:'Tears of Steel — 65-second excerpt',eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',chaptersVtt:'./assets/tears-of-steel-chapters.vtt',storyboard:'./assets/tears-of-steel-storyboard.vtt'};
-  if(filmCutStatus)filmCutStatus.textContent='OPEN FILM / 65-SECOND EDIT';
- }
-}).catch(()=>{/* Stream the full open film if the optional local excerpt is absent. */});
-// Resolve the full-film sprite and optional local excerpt BEFORE mounting LIVE ACTION.
-// Without this gate, a user clicking quickly can lock a gray preview in place
-// even when the correct storyboard files exist on the server.
-const liveActionAssetsReady=Promise.allSettled([fullFilmStoryboardProbe,liveActionExcerptProbe]).finally(()=>clearTimeout(liveAssetCheckTimeout));
+const liveActionAssetsReady=fetch('./assets/prism-media-manifest.json',{cache:'no-store'})
+  .then(response=>response.ok?response.json():null)
+  .then(assets=>{
+    if(!assets || typeof assets!=='object')return;
+    if(assets.fullFilmStoryboard && films.liveaction.src.startsWith('https://video.blender.org/')){
+      films.liveaction.storyboard='./assets/tears-of-steel-full-storyboard.vtt';
+    }
+    if(assets.liveActionExcerpt && !new URLSearchParams(location.search).has('liveMux')){
+      films.liveaction={
+        captionsDefault:true,src:'./assets/tears-of-steel-excerpt.mp4',
+        poster:'./assets/tears-of-steel-poster.jpg',
+        captions:'./assets/tears-of-steel-excerpt.vtt',
+        captionLabel:'English / excerpt',
+        title:'Tears of Steel — 65-second excerpt',
+        eyebrow:'OPEN FILM / REAL-WORLD FOOTAGE',
+        chaptersVtt:'./assets/tears-of-steel-chapters.vtt',
+        storyboard:'./assets/tears-of-steel-storyboard.vtt'
+      };
+      if(filmCutStatus)filmCutStatus.textContent='OPEN FILM / 65-SECOND EDIT';
+    }
+  }).catch(()=>{/* Default full movie and native frame preview remain usable. */});
 // A public Mux playback ID can be previewed as LIVE ACTION without rebuilding PRISM.
 const query=new URLSearchParams(location.search);
 const liveMuxCandidate=query.get('liveMux');
