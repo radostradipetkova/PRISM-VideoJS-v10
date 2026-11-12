@@ -19,13 +19,13 @@ async def check(browser_type,name,base):
         page=await browser.new_page(viewport={'width':390,'height':844},reduced_motion='reduce')
         # A deterministic clipboard for all engines: exercises the actual
         # in-page click/copy code without requiring OS clipboard privileges.
-        await page.add_init_script("""() => {
+        await page.add_init_script("""(() => {
           Object.defineProperty(navigator,'clipboard',{
             configurable:true,value:{writeText:async value=>{
               window.__momentCopied=value;
             }}
           });
-        }""")
+        })()""")
         start_url=base+'/?film=night&t=2.25&source=local#player-wrap'
         response=await page.goto(start_url,wait_until='domcontentloaded',timeout=30000)
         assert response.status==200
