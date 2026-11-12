@@ -147,6 +147,10 @@ if(linkedFilm==='liveaction'){
  liveActionAssetsReady.then(()=>{if(filmSelectionSerial===0)load('liveaction');});
 }else load(linkedFilm);
 function selectFilm(film){
+ // A deliberate new selection supersedes any pending shared-link seek.
+ momentToRestore=null;
+ cancelMomentRestore();
+ cancelMomentRestore=()=>{};
  const serial=++filmSelectionSerial;
  if(film!=='liveaction'){load(film);return;}
  // Never remount a playing movie in response to a late HEAD request.
