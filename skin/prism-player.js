@@ -7,6 +7,7 @@ import {DEFAULT_REMEMBER_KEY,safeStorage,readRememberedSettings,saveRememberedSe
 import {normalizeChapters} from './chapter-index.js';
 import {initControlHints} from './control-hints.js';
 import {initVanishingInterface} from './vanishing-interface.js';
+import {initMomentStamp} from './moment-stamp.js';
 /** PRISM — reusable HTML custom-element skin for genuine Video.js v10.
  * Requires @videojs/cdn@10.3.0/video.js (or equivalent @videojs/html package
  * registrations) before mounting. The media itself is the state source.
@@ -39,7 +40,7 @@ export function mountPrismPlayer(target, options={}) {
     title='Untitled video', eyebrow='PRISM / OPTICAL PLAYER', captions=null,
     captionLabel='English / descriptive', captionLang='en', captionsDefault=false,
     muxPlaybackId=null, qualitySources=[], muted=false, chapters=[], chaptersVtt=null, chapterMode='auto', storyboard=null,
-    autoRotateFullscreen=true, preferences={}, playbackRate=null, preferencesStorageKey=DEFAULT_REMEMBER_KEY } = options;
+    autoRotateFullscreen=true, preferences={}, playbackRate=null, momentLink=null, preferencesStorageKey=DEFAULT_REMEMBER_KEY } = options;
   if (muxPlaybackId && !/^[A-Za-z0-9]+$/.test(muxPlaybackId)) throw new Error('Invalid public Mux playback ID');
   // Separate MP4 encodes can only switch quality by changing sources.
   // Never misrepresent a plain MP4 as a Mux-like adaptive Auto stream.
@@ -105,6 +106,12 @@ export function mountPrismPlayer(target, options={}) {
             <span class="prism-volume-scale-track"><i></i></span>
           </div>
           <div class="prism-bottom">
+            <button type="button" class="prism-moment-stamp" hidden aria-label="Copy a link to this film moment">
+              <span class="prism-moment-mark" aria-hidden="true">✣</span>
+              <span class="prism-moment-time" aria-hidden="true">00:00</span>
+              <span class="prism-moment-action" aria-hidden="true">COPY MOMENT</span>
+              <span class="prism-moment-feedback prism-visually-hidden" aria-live="polite"></span>
+            </button>
             <div class="prism-dock">
               <div class="prism-dock-header" aria-hidden="true">
                 <span class="prism-dock-index">01 <span>/</span> TIMELINE</span>
@@ -465,6 +472,7 @@ export function mountPrismPlayer(target, options={}) {
   const skin = target.querySelector('.prism-skin');
   const controlHints=initControlHints({skin,media:mediaElement});
   const vanishingInterface=initVanishingInterface({skin,media:mediaElement});
+  const momentStamp=initMomentStamp({skin,media:mediaElement,getLink:momentLink});
   // Escape dismisses a Tab-focused control's outline when no overlay is
   // active. Keep native Video.js menus, PRISM dialogs and fullscreen first.
   // Capture lets this work on Web Components that stop bubbling key events.
@@ -588,6 +596,7 @@ export function mountPrismPlayer(target, options={}) {
     sceneLoop.destroy();
     controlHints.destroy();
     vanishingInterface.destroy();
+    momentStamp.destroy();
     nativeQualitySection?.removeEventListener('click',onNativeQualityClick);
     mediaElement.removeEventListener('loadedmetadata',onNativeQualityMetadata);
     mediaElement.removeEventListener('error',onNativeQualityError);
