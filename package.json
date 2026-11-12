@@ -16,8 +16,7 @@
     "prepare:film": "node scripts/prepare-film.mjs"
   },
   "devDependencies": {
-    "wrangler": "^4.158.0",
-    "esbuild": "0.28.2"
+    "wrangler": "^4.158.0"
   },
   "optionalDependencies": {
     "ffmpeg-static": "^5.2.0"
