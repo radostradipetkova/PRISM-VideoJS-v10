@@ -366,11 +366,18 @@ async def check(browser_type, name, url, reportdir):
             }""",timeout=9000)
             outcomes['mux_manual_480p_quality_selection']=True
             auto_choice=quality.locator('media-menu-radio-item').filter(has_text='Auto').first
-            # Popover data-open and actual visibility can briefly disagree
-            # after selecting a rendition. Reopen based on rendered state.
+            # Selecting a Video.js rendition closes the native menu
+            # asynchronously. Let the closing transition finish first,
+            # otherwise a second commandfor activation can immediately close
+            # the menu *after* we try to reopen it.
+            await page.wait_for_timeout(400)
+            menu_was_open=await quality.evaluate(
+                "(el)=>el.closest('media-menu')?.hasAttribute('data-open')")
+            outcomes['mux_menu_open_after_480_settled']=menu_was_open
+            if menu_was_open and not await auto_choice.is_visible():
+                await page.keyboard.press('Escape')
+                await page.wait_for_timeout(150)
             if not await auto_choice.is_visible():
-                # Use a trusted Playwright click here: the HTML commandfor
-                # popover requires a real user activation to reopen.
                 await speed_button.click()
             await auto_choice.wait_for(state='visible',timeout=12000)
             await auto_choice.evaluate('(item)=>item.click()')

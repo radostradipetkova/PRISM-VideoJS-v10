@@ -53,6 +53,12 @@ async def main():
                   errorHidden: getComputedStyle(document.querySelector('.prism-error')).display==='none',
                   backdropFilter: getComputedStyle(document.querySelector('.prism-dock')).backdropFilter})''')
                 await page.locator('.prism-buffering').evaluate("el => el.setAttribute('data-visible','')")
+                # The indicator fades in over 180ms. Wait for *visible* pixels,
+                # not merely the data-visible attribute, before comparing.
+                await page.wait_for_function("""() => {
+                  const c=getComputedStyle(document.querySelector('.prism-buffering'));
+                  return c.visibility==='visible' && Number(c.opacity)>.98;
+                }""",timeout=3500)
                 await page.locator('.prism-error').evaluate("el => el.setAttribute('data-open','')")
                 indicators=await page.evaluate('''() => ({bufferShown:(()=>{const c=getComputedStyle(document.querySelector('.prism-buffering'));return c.visibility==='visible'&&Number(c.opacity)===1;})(),
                     errorShown:getComputedStyle(document.querySelector('.prism-error')).display!=='none'})''')
