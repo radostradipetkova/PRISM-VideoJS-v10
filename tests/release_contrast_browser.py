@@ -49,12 +49,12 @@ async def main():
                 ratio=contrast(px,mute)
                 ratio_white=contrast(px,(247,238,225))
                 css_data=await page.evaluate('''() => ({overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth+1,
-                  bufferHidden: getComputedStyle(document.querySelector('.prism-buffering')).display==='none',
+                  bufferHidden: (()=>{const c=getComputedStyle(document.querySelector('.prism-buffering'));return c.visibility==='hidden'&&Number(c.opacity)===0;})(),
                   errorHidden: getComputedStyle(document.querySelector('.prism-error')).display==='none',
                   backdropFilter: getComputedStyle(document.querySelector('.prism-dock')).backdropFilter})''')
                 await page.locator('.prism-buffering').evaluate("el => el.setAttribute('data-visible','')")
                 await page.locator('.prism-error').evaluate("el => el.setAttribute('data-open','')")
-                indicators=await page.evaluate('''() => ({bufferShown:getComputedStyle(document.querySelector('.prism-buffering')).display !== 'none',
+                indicators=await page.evaluate('''() => ({bufferShown:(()=>{const c=getComputedStyle(document.querySelector('.prism-buffering'));return c.visibility==='visible'&&Number(c.opacity)===1;})(),
                     errorShown:getComputedStyle(document.querySelector('.prism-error')).display!=='none'})''')
                 ok=ratio>=4.5 and ratio_white>=4.5 and not css_data['overflow'] and css_data['bufferHidden'] and css_data['errorHidden'] and indicators['bufferShown'] and indicators['errorShown']
                 result=dict(width=w,footage='bright' if bright else 'dark',rgb=px,mutedTextContrast=ratio,lightTextContrast=ratio_white,passCheck=ok,**css_data,**indicators)
