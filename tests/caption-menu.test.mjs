@@ -32,9 +32,11 @@ test('both players support asynchronous text-track loading and deterministic man
 test('LIVE ACTION enables real captions and validates both local excerpt assets before selection',async()=>{
  const app=await read('src/app.js');
  assert.match(app,/'liveaction':\{captionsDefault:true/);
- assert.match(app,/films\.liveaction=\{captionsDefault:true/);
- assert.match(app,/tears-of-steel-excerpt\.vtt'\s*,\s*\{method:'HEAD'/);
- assert.match(app,/subtitles\.ok/);
+ assert.match(app,/films\.liveaction=\{/);
+ assert.match(app,/assets\.liveActionExcerpt/);
+ assert.match(app,/tears-of-steel-excerpt\.vtt/);
+ assert.match(app,/prism-media-manifest\.json/);
+ assert.doesNotMatch(app,/method:'HEAD'/);
  const subtitle=await read('assets/tears-of-steel-excerpt.vtt');
  assert.match(subtitle,/^WEBVTT/);
  assert.match(subtitle,/00:00:02\.000 --> 00:00:05\.000/);
