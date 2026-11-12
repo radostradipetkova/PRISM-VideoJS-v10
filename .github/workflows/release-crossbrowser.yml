@@ -58,6 +58,8 @@ jobs:
         if: matrix.browser == 'chromium'
         run: python tests/release_contrast_browser.py
       - run: python tests/release_crossbrowser.py --browser ${{ matrix.browser }}
+      - name: Validate production smoke-test syntax
+        run: python -m py_compile tests/optimized_release_browser.py
       - name: Smoke-test optimized dist player, controls and mobile layout
         run: python tests/optimized_release_browser.py --browser ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
