@@ -4,3 +4,4 @@
  */
 export {mountPrismPlayer, VIDEOJS_VERSION} from './prism-player.js';
 export {normalizeChapters, parseChapterVTT, indexLayout} from './chapter-index.js';
+export {parseMomentSeconds,formatMomentTime,restoreMomentToMedia} from './moment-stamp.js';
