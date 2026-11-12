@@ -39,10 +39,10 @@ test('Both PRISM players use the actual sprite to draw previews instead of seeki
 
 test('LIVE ACTION checks complete storyboard assets before mounting a film',()=>{
  const app=readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
- assert.match(app,/const fullFilmStoryboardProbe=Promise\.all/);
+ assert.match(app,/assets\.fullFilmStoryboard/);
  assert.match(app,/tears-of-steel-full-storyboard\.vtt/);
- assert.match(app,/tears-of-steel-full-storyboard\.jpg/);
- assert.match(app,/const liveActionAssetsReady=Promise\.allSettled/);
+ assert.match(app,/prism-media-manifest\.json/);
+ assert.match(app,/const liveActionAssetsReady=fetch/);
  assert.match(app,/liveActionAssetsReady\.then/);
  assert.match(app,/serial===filmSelectionSerial/);
 });
