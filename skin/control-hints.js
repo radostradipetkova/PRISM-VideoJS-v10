@@ -30,6 +30,9 @@ export function initControlHints({skin,media}){
   }
   function position(){
     if(!anchor || hint.hidden)return;
+    if(!anchor.isConnected || !skin.contains(anchor) || anchor.matches?.(':disabled,[aria-disabled="true"],[hidden]')){
+      hide();return;
+    }
     const view=skin.getBoundingClientRect();
     const box=anchor.getBoundingClientRect();
     if(box.width===0 || box.height===0 || getComputedStyle(anchor).visibility==='hidden'){
@@ -44,7 +47,8 @@ export function initControlHints({skin,media}){
     hint.style.top=Math.round(y)+'px';
   }
   function show(element,nextMode){
-    if(!element?.hasAttribute?.('data-prism-hint') || blocked())return;
+    if(!element?.hasAttribute?.('data-prism-hint') || blocked() ||
+       element.matches?.(':disabled,[aria-disabled="true"],[hidden]'))return;
     const label=labelFor(element);
     if(!label)return;
     anchor=element;mode=nextMode;
@@ -94,6 +98,10 @@ export function initControlHints({skin,media}){
   document.addEventListener('fullscreenchange',update);
   document.addEventListener('webkitfullscreenchange',update);
   window.addEventListener('resize',update);
+  // Scroll can move the focused or hovered control without changing viewport size.
+  // Capture also covers scrolling inside the chapter and settings panels.
+  document.addEventListener('scroll',update,true);
+  window.addEventListener('blur',hide);
   return {destroy(){
     skin.removeEventListener('pointerover',onPointerOver);
     skin.removeEventListener('pointerout',onPointerOut);
@@ -108,6 +116,8 @@ export function initControlHints({skin,media}){
     document.removeEventListener('fullscreenchange',update);
     document.removeEventListener('webkitfullscreenchange',update);
     window.removeEventListener('resize',update);
+    document.removeEventListener('scroll',update,true);
+    window.removeEventListener('blur',hide);
     hint.remove();
   }};
 }
