@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync, existsSync} from 'node:fs';
-import {chapterAtTime,clamp,seekTarget,touchRegion,DEFAULT_CHAPTERS} from '../src/optical-touch.js';
+import {chapterAtTime,clamp,seekTarget,touchRegion,DEFAULT_CHAPTERS,isIOSVolumeLocked} from '../src/optical-touch.js';
 const ROOT=new URL('../',import.meta.url);
 const read=f=>readFileSync(new URL(f,ROOT),'utf8');
 
@@ -45,4 +45,25 @@ test('local storyboard cue assets exist, with real scene frames and xywh sprite 
 test('liquid glass opt-out, reduced transparency and reduced motion supported',()=>{
  const css=read('src/styles.css');
  for(const needle of ['.prism-solid-surface','prefers-reduced-transparency','prefers-reduced-motion','prism-optical-loupe','prism-iris'])assert.ok(css.includes(needle));
+});
+
+test('iOS/iPadOS hardware volume is never presented as a writable web control',()=>{
+ assert.equal(isIOSVolumeLocked({platform:'iPhone',maxTouchPoints:5}),true);
+ assert.equal(isIOSVolumeLocked({platform:'iPad',maxTouchPoints:5}),true);
+ assert.equal(isIOSVolumeLocked({platform:'MacIntel',maxTouchPoints:5}),true);
+ assert.equal(isIOSVolumeLocked({platform:'MacIntel',maxTouchPoints:0}),false);
+ assert.equal(isIOSVolumeLocked({platform:'Win32',maxTouchPoints:5}),false);
+ for(const p of ['src/optical-touch.js','skin/optical-touch.js']){
+   const js=read(p);
+   assert.match(js,/VOLUME \/ USE DEVICE BUTTONS/);
+   assert.match(js,/skin\.classList\.contains\('prism-allow-embed-swipes'\)/);
+ }
+});
+test('iOS gesture surfaces disable browser panning but retain scrollable settings',()=>{
+ for(const cssPath of ['src/styles.css','skin/prism-skin.css']){
+   const css=read(cssPath);
+   assert.match(css,/prism-allow-embed-swipes \.prism-media/);
+   assert.match(css,/prism-preferences-panel\{touch-action:pan-y/);
+   assert.match(css,/minimal-motion \*::after/);
+ }
 });
