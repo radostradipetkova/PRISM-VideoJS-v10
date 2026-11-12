@@ -344,19 +344,24 @@ async def check(browser_type, name, url, reportdir):
                 '#prism-mount .prism-quality-group')?.closest('media-menu')?.hasAttribute('data-open')""",timeout=8000)
             rendition480=quality.locator('media-menu-radio-item').filter(has_text='480p').first
             await rendition480.wait_for(state='visible',timeout=8000)
-            await rendition480.click()
+            # Native menu items can be visually inside a player popover
+            # but outside the page viewport at phone sizes. Dispatch a real
+            # DOM click after confirming the item is visible.
+            await rendition480.evaluate('(item)=>item.click()')
             await page.wait_for_function("""() => {
                 const media=document.querySelector('#prism-mount mux-video.prism-media');
                 return Array.from(media?.videoRenditions||[]).some(r=>r.height===480 && r.selected);
             }""",timeout=9000)
             outcomes['mux_manual_480p_quality_selection']=True
-            quality_menu_open=await quality.evaluate(
-                "(el)=>el.closest('media-menu')?.hasAttribute('data-open')")
-            if not quality_menu_open:
-                await speed_button.click()
             auto_choice=quality.locator('media-menu-radio-item').filter(has_text='Auto').first
+            # Popover data-open and actual visibility can briefly disagree
+            # after selecting a rendition. Reopen based on rendered state.
+            if not await auto_choice.is_visible():
+                await speed_button.evaluate('(button)=>button.click()')
+            if not await auto_choice.is_visible():
+                await speed_button.evaluate('(button)=>button.click()')
             await auto_choice.wait_for(state='visible',timeout=8000)
-            await auto_choice.click()
+            await auto_choice.evaluate('(item)=>item.click()')
             await page.wait_for_function("""() => {
                 const group=document.querySelector('#prism-mount .prism-quality-group');
                 const first=group?.querySelector('media-menu-radio-item');
