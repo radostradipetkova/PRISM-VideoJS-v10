@@ -12,10 +12,10 @@ test('optional media is announced by build manifest, never probed as missing med
  assert.equal(defaults.fullFilmStoryboard,false);
  assert.equal(defaults.liveActionExcerpt,false);
 });
-test('critical poster is discoverable before Video.js boot',()=>{
+test('poster is not preloaded separately from its actual Video.js request',()=>{
  const html=read('index.html');
- assert.match(html,/<link rel="preload" as="image" href="\.\/assets\/prism-cinematic\.jpg" fetchpriority="high">/);
- assert.ok(html.indexOf('rel="preload"')<html.indexOf('src="./src/app.js"'));
+ assert.doesNotMatch(html,/rel="preload" as="image" href="\.\/assets\/prism-cinematic\.jpg"/);
+ assert.match(html,/rel="preconnect" href="https:\/\/cdn\.jsdelivr\.net"/);
 });
 test('mobile player reserves its footprint before chapter navigation',()=>{
  const css=read('src/styles.css');
