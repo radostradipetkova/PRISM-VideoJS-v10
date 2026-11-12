@@ -1,4 +1,5 @@
 import {mountPrismPlayer} from './prism-player.js';
+import {createMomentUrl,parseMomentSeconds,restoreMomentToMedia} from './moment-stamp.js';
 import {initFeatureDemos} from './feature-demos.js';
 import {initPlayerQA} from './qa-panel.js';
 import {initTypeMotion} from './text-motion.js';
@@ -57,6 +58,11 @@ let useLocalCinematic=query.get('source')==='local';
 // Optical Index defaults to authored chapters; ?index=time opts into neutral
 // duration-based markers, and ?index=none hides navigation altogether.
 const indexMode=['auto','smart','time','none'].includes(query.get('index'))?query.get('index'):null;
+// A shared Moment Stamp can select a real film and its playhead position.
+const linkedFilm=Object.hasOwn(films,query.get('film'))?query.get('film'):'cinematic';
+const linkedSeconds=parseMomentSeconds(query.get('t'));
+let momentToRestore=linkedSeconds===null?null:{film:linkedFilm,seconds:linkedSeconds};
+let cancelMomentRestore=()=>{};
 let current=null;
 let currentFilm='cinematic';
 let playerPreferences={};
@@ -80,6 +86,9 @@ const qa=query.get('qa')==='1' ? initPlayerQA(document.querySelector('.player-re
 initKeyboardAid({mount,getPlayer:()=>current?.player,getMedia:()=>current?.media});
 function load(film='cinematic'){
  if(!Object.hasOwn(films,film))return;
+ // Never let a stale media element complete an old shared-link seek.
+ cancelMomentRestore();
+ cancelMomentRestore=()=>{};
  currentFilm=film;
  const old=current?.media;
  const previousVolume=old && Number.isFinite(old.volume)?old.volume:1;
@@ -95,8 +104,14 @@ function load(film='cinematic'){
  if(filmCredit)filmCredit.hidden=film!=='liveaction';
  const effectiveIndexMode=indexMode??((film==='liveaction'||isMuxCinematic)?'smart':'auto');
  current=mountPrismPlayer(mount,{...films[film], chapterMode:effectiveIndexMode, preferences:playerPreferences, playbackRate:previousRate,
+   momentLink:seconds=>createMomentUrl(location.href,seconds,film,{localCinematic:useLocalCinematic}),
    ...(foreignMux?{chapters:[],chaptersVtt:null}:{}),
    ...(isMuxCinematic?{muxPlaybackId:muxId}:{})});
+ if(momentToRestore?.film===film){
+   const seconds=momentToRestore.seconds;
+   momentToRestore=null;
+   cancelMomentRestore=restoreMomentToMedia(current.media,seconds);
+ }
  runtimeNote.hidden=true;
  runtimeNote.replaceChildren();
  featureDemos.setMedia(current.media);
@@ -123,9 +138,14 @@ function load(film='cinematic'){
   button.classList.toggle('selected',active);button.setAttribute('aria-pressed',String(active));
  });
  // Only changing the selected film remounts media; the player settings remain in the skin.
+ queueMicrotask(attachChapterReadout);
 }
-load();
 let filmSelectionSerial=0;
+// The optional live-action excerpt must be resolved before a shared link
+// mounts it. Normal film links are immediate and never autoplay.
+if(linkedFilm==='liveaction'){
+ liveActionAssetsReady.then(()=>{if(filmSelectionSerial===0)load('liveaction');});
+}else load(linkedFilm);
 function selectFilm(film){
  const serial=++filmSelectionSerial;
  if(film!=='liveaction'){load(film);return;}
