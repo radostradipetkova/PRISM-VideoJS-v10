@@ -17,7 +17,6 @@ export function initControlHints({skin,media}){
       case 'mute':return media.muted || media.volume===0?'Unmute audio':'Mute audio';
       case 'fullscreen':return (document.fullscreenElement||document.webkitFullscreenElement)?'Exit fullscreen':'Enter fullscreen';
       case 'playback':return element.getAttribute('aria-label') || 'Playback speed';
-      case 'seek':return 'Seek timeline · hover to preview';
       default:return element?.dataset.prismHint || '';
     }
   }
