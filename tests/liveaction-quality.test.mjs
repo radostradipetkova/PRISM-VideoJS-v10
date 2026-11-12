@@ -14,7 +14,8 @@ test('Live Action uses actual Blender film variants, not fabricated resolution o
   }
   assert.match(app,/src:'https:\/\/video\.blender\.org\/download\/web-videos\/.+-720\.mp4',qualitySources:/);
   assert.match(app,/if\(liveMuxId\)films\.liveaction=/);
-  assert.match(app,/films\.liveaction=\{captionsDefault:true,src:'\.\/assets\/tears-of-steel-excerpt\.mp4'/);
+  assert.match(app,/if\(assets\.liveActionExcerpt/);
+  assert.match(app,/src:'\.\/assets\/tears-of-steel-excerpt\.mp4'/);
 });
 for(const file of ['src/prism-player.js','skin/prism-player.js']){
  test('Live Action MP4 quality selections preserve media, caption and chapter state: '+file,()=>{
