@@ -8,7 +8,7 @@ for(const part of ['src','skin']){
     const player=read(part+'/prism-player.js');
     for(const label of ['play','Back 5 seconds','Forward 5 seconds','Playback time · elapsed / total',
       'mute','Adjust volume','playback','Subtitles and caption settings','Scene Loop · repeat a chapter',
-      'Player settings','Picture in Picture','fullscreen','seek']){
+      'Player settings','Picture in Picture','fullscreen']){
       assert.ok(player.includes('data-prism-hint="'+label+'"'),label+' missing in '+part);
     }
     assert.match(player,/initControlHints\(\{skin,media:mediaElement\}\)/);
@@ -51,4 +51,19 @@ test('tooltips follow scrolling and never attach to disabled or removed controls
   assert.match(showcase,/window\.removeEventListener\('blur',hide\)/);
   assert.match(showcase,/!anchor\.isConnected/);
   assert.match(showcase,/:disabled,\[aria-disabled="true"\],\[hidden\]/);
+});
+
+test('Timeline never triggers the instructional tooltip; Optical Scan and accessibility stay intact',()=>{
+ for(const part of ['src','skin']){
+  const player=read(part+'/prism-player.js');
+  const hints=read(part+'/control-hints.js');
+  assert.match(player,/<media-time-slider class="prism-rail" step="1" large-step="10"/);
+  assert.match(player,/<media-time-slider class="prism-rail"[^>]*aria-label="Seek in video"/);
+  assert.match(player,/<media-slider-preview class="prism-preview"/);
+  assert.match(player,/class="prism-loupe-header"/);
+  assert.doesNotMatch(player,/data-prism-hint="seek"/);
+  assert.doesNotMatch(hints,/Seek timeline · hover to preview/);
+  assert.match(player,/data-prism-hint="play"/);
+  assert.match(player,/data-prism-hint="mute"/);
+ }
 });
