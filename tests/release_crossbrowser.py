@@ -281,6 +281,29 @@ async def check(browser_type, name, url, reportdir):
         await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
         mux=page.locator('#prism-mount mux-video.prism-media')
         await mux.wait_for(timeout=12000)
+        # Adaptive Quality is part of Playback only for streams, not MP4s.
+        assert await page.locator('#player-a .prism-quality-section').count()==0, 'MP4 unexpectedly offers manual quality'
+        assert await page.locator('#player-b .prism-quality-section').count()==0, 'MP4 unexpectedly offers manual quality'
+        quality=page.locator('#prism-mount .prism-quality-group')
+        assert await quality.count()==1, 'Mux stream missing native Video.js quality selector'
+        assert await quality.evaluate('(group)=>!!customElements.get(group.localName)'), 'Native quality radio group was not registered'
+        assert await page.locator('#prism-mount .prism-settings-trigger[aria-label="Playback speed and quality"]').count()==1
+        await page.wait_for_timeout(750)
+        quality_diagnostics=await mux.evaluate("""media=>{
+          const group=document.querySelector('#prism-mount .prism-quality-group');
+          const renditions=Array.from(media.videoRenditions||[]);
+          const section=group.closest('.prism-quality-section');
+          return {
+            mediaState:media.readyState,
+            renditionCount:renditions.length,
+            heights:renditions.map(r=>r.height),
+            manualAvailability:group.getAttribute('data-availability'),
+            groupHidden:group.hidden,
+            sectionVisible:getComputedStyle(section).display!=='none',
+            choices:[...group.querySelectorAll('media-menu-radio-item')].map(e=>e.textContent.trim())
+          };
+        }""")
+        outcomes['mux_native_quality_selector']=quality_diagnostics
         mux_trigger=page.locator('#prism-mount .prism-captions-trigger')
         await mux_trigger.evaluate('(button)=>button.click()')
         await page.wait_for_function('document.querySelector("#prism-mount .prism-captions-menu")?.hasAttribute("data-open")',timeout=10000)
