@@ -307,12 +307,15 @@ async def check(browser_type, name, url, reportdir):
         await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
         mux=page.locator('#prism-mount mux-video.prism-media')
         await mux.wait_for(timeout=12000)
-        # Full showcase exposes the skip controls at desktop width.
+        # Browser is still at 375px after mobile transport checks.
+        # Widen for desktop-only skip buttons, then return to mobile.
+        await page.set_viewport_size({'width':1280,'height':800})
         await page.locator('#prism-mount .prism-skip.skip-back').hover()
         showcase_hint=page.locator('#prism-mount .prism-control-hint')
         assert await showcase_hint.inner_text()=='Back 5 seconds', 'Desktop skip-back tooltip missing'
         await page.locator('#prism-mount .prism-skip.skip-forward').hover()
         assert await showcase_hint.inner_text()=='Forward 5 seconds', 'Desktop skip-forward tooltip missing'
+        await page.set_viewport_size({'width':375,'height':812})
         # Adaptive Quality is part of Playback only for streams, not MP4s.
         assert await page.locator('#player-a .prism-quality-section').count()==0, 'MP4 unexpectedly offers manual quality'
         assert await page.locator('#player-b .prism-quality-section').count()==0, 'MP4 unexpectedly offers manual quality'
