@@ -1316,3 +1316,17 @@
 @container (min-width:481px) and (max-width:600px){
   .prism-skin{height:calc(56.25cqw + 224px)}
 }
+
+/* PRISM 2.8 — NATIVE MUX ADAPTIVE QUALITY
+   The native Video.js radio group reads real rendition state and offers Auto.
+   Hide the entire quality section when manual selection is unavailable.
+   Keep the mobile transport uncluttered by using the existing Playback menu. */
+.prism-skin .prism-quality-section{margin-top:9px;padding-top:5px;border-top:1px solid rgba(45,39,34,.2)}
+.prism-skin .prism-quality-title{margin-top:2px;color:#805039}
+.prism-skin .prism-quality-group{display:block}
+.prism-skin .prism-quality-section:has(.prism-quality-group[hidden]),
+.prism-skin .prism-quality-section:has(.prism-quality-group[data-availability="unavailable"]),
+.prism-skin .prism-quality-section:has(.prism-quality-group[data-hidden]){display:none}
+.prism-skin .prism-quality-tier{margin-left:4px;font-size:10px;color:#805039}
+.prism-skin .prism-quality-badge{margin-left:auto;font-size:10px;font-weight:700}
+.prism-skin .prism-quality-group .prism-menu-item{min-height:44px}

@@ -122,9 +122,15 @@ export function mountPrismPlayer(target, options={}) {
                 <media-mute-button class="prism-control prism-mute">${state('mute-state',icon.mute,icon.sound)}</media-mute-button>
                 <media-volume-slider class="prism-volume" step="5" aria-label="Volume"><media-slider-track><media-slider-fill></media-slider-fill></media-slider-track><media-slider-thumb></media-slider-thumb></media-volume-slider>
                 <div class="prism-separator" aria-hidden="true"></div>
-                <button class="prism-control prism-settings-trigger" type="button" commandfor="${rateMenu}" aria-label="Playback speed">${icon.speed}<span class="prism-text-caption">SPEED</span></button>
+                <button class="prism-control prism-settings-trigger" type="button" commandfor="${rateMenu}" aria-label="${muxPlaybackId?'Playback speed and quality':'Playback speed'}" title="${muxPlaybackId?'Playback speed and quality':'Playback speed'}">${icon.speed}<span class="prism-text-caption">${muxPlaybackId?'PLAYBACK':'SPEED'}</span></button>
                 <media-menu id="${rateMenu}" class="prism-menu" side="top" align="end">
-                  <media-menu-content><div class="prism-menu-title">PLAYBACK RATE</div><media-playback-rate-radio-group aria-label="Playback speed"><template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template></media-playback-rate-radio-group></media-menu-content>
+                  <media-menu-content><div class="prism-menu-title">PLAYBACK RATE</div><media-playback-rate-radio-group aria-label="Playback speed"><template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template></media-playback-rate-radio-group>
+                    ${muxPlaybackId ? `<section class="prism-quality-section" aria-label="Video quality settings">
+                      <div class="prism-menu-title prism-quality-title">VIDEO QUALITY</div>
+                      <media-quality-radio-group class="prism-quality-group" label="Video quality">
+                        <template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><span data-part="tier" class="prism-quality-tier"></span><span data-part="badge" class="prism-quality-badge"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template>
+                      </media-quality-radio-group>
+                    </section>` : ''}</media-menu-content>
                 </media-menu>
                 ${hasCaptions ? `<button class="prism-control prism-settings-trigger prism-captions-trigger" type="button" commandfor="${ccMenu}" aria-label="Caption tracks and settings">${icon.captions}</button>
                 <media-menu id="${ccMenu}" class="prism-menu prism-captions-menu" side="top" align="end"><media-menu-content>
@@ -265,7 +271,7 @@ export function mountPrismPlayer(target, options={}) {
     'video-player','media-container','media-controls','media-controls-content',
     'media-play-button','media-time-slider','media-slider-thumb','media-seek-button',
     'media-mute-button','media-volume-slider','media-fullscreen-button',
-    'media-menu','media-playback-rate-radio-group','media-pip-button',
+    'media-menu','media-playback-rate-radio-group','media-pip-button',...(muxPlaybackId ? ['media-quality-radio-group'] : []),
     'media-hotkey','media-gesture','media-status-announcer','media-slider-thumbnail','media-thumbnail',...(muxPlaybackId ? ['mux-video'] : []),...(hasCaptions ? ['media-captions-radio-group'] : [])
   ];
   const retry = target.querySelector('.prism-retry');

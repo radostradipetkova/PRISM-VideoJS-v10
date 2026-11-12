@@ -11,7 +11,7 @@ export function registerVideoJS(){
     await Promise.all([
       'ui/slider-preview.js', 'ui/slider-value.js', 'ui/slider-thumbnail.js',
       'ui/thumbnail.js', 'ui/seek-button.js', 'ui/gesture.js',
-      'ui/playback-rate-radio-group.js', 'ui/captions-radio-group.js',
+      'ui/playback-rate-radio-group.js', 'ui/quality-radio-group.js', 'ui/captions-radio-group.js',
       'ui/status-announcer.js', 'ui/menu-radio-item.js',
       'ui/menu-item-indicator.js', 'media/mux-video.js'
     ].map(path => import(`${cdn}/${path}`)));
