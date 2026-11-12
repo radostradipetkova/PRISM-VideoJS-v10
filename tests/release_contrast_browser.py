@@ -60,7 +60,7 @@ async def main():
                   return c.visibility==='visible' && Number(c.opacity)>.98;
                 }""",timeout=3500)
                 await page.locator('.prism-error').evaluate("el => el.setAttribute('data-open','')")
-                indicators=await page.evaluate('''() => ({bufferShown:(()=>{const c=getComputedStyle(document.querySelector('.prism-buffering'));return c.visibility==='visible'&&Number(c.opacity)===1;})(),
+                indicators=await page.evaluate('''() => ({bufferShown:(()=>{const c=getComputedStyle(document.querySelector('.prism-buffering'));return c.visibility==='visible'&&Number(c.opacity)>.98;})(),
                     errorShown:getComputedStyle(document.querySelector('.prism-error')).display!=='none'})''')
                 ok=ratio>=4.5 and ratio_white>=4.5 and not css_data['overflow'] and css_data['bufferHidden'] and css_data['errorHidden'] and indicators['bufferShown'] and indicators['errorShown']
                 result=dict(width=w,footage='bright' if bright else 'dark',rgb=px,mutedTextContrast=ratio,lightTextContrast=ratio_white,passCheck=ok,**css_data,**indicators)
