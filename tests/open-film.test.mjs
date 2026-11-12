@@ -5,7 +5,8 @@ const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const app=read('../src/app.js'),html=read('../index.html'),builder=read('../scripts/build.mjs');
 test('open film is an optional additional demo; the original Mux reel remains the default',()=>{
  assert.match(app,/let currentFilm='cinematic'/);
- assert.match(app,/load\(\);/);
+ assert.match(app,/else load\(linkedFilm\);/);
+ assert.match(app,/const linkedFilm=Object\.hasOwn\(films,query\.get\('film'\)\)\?query\.get\('film'\):'cinematic'/);
  assert.match(html,/data-film="cinematic" aria-pressed="true"/);
  assert.match(html,/data-film="liveaction" aria-pressed="false"/);
  assert.match(app,/Blender|video\.blender\.org|tears-of-steel-excerpt\.mp4/);
