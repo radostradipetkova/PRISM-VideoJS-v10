@@ -194,3 +194,12 @@ The Explore Optical Index now stays usable while remote metadata loads. To autom
 - [Release validation](./docs/RELEASE-VALIDATION.md) — actual CI evidence and the limits of automated browser results.
 
 The Optical Deck uses readable hover/focus explanations without adding buttons. The Playback control remains icon-only. Both Mux and genuine multi-resolution MP4 sources can expose quality choices. PRISM never auto-plays decorative video in the background.
+
+
+## Moment Stamp — share an exact video moment
+
+Pause a film (or seek while paused) and select **COPY MOMENT** just above the Optical Deck. The small stamp copies the current film and timecode to an ordinary HTTPS link. The link selects the same film and restores the timestamp once that film is seekable; it never autoplays. The selected Mux playback ID and local source mode survive the round trip.
+
+Example: `?film=night&t=12.34#player-wrap`
+
+The action is keyboard accessible, disappears while playing, respects reduced motion and does not add another full transport row. The clipboard reports success only after the browser confirms copying. Safari uses the document-copy fallback when the Clipboard API is unavailable. Automated unit tests and a real-video share/open round-trip check cover the behavior.
