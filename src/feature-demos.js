@@ -33,6 +33,8 @@ export function initFeatureDemos(root = document) {
   let dragging = false;
   let detachMedia = () => {};
   let flashTimeout = null;
+  let mediaGeneration = 0;
+  let pendingSeek = null;
 
   const announce = (element, message) => {
     // Only announce actual state changes: avoid repeating an aria-live message
@@ -64,9 +66,17 @@ export function initFeatureDemos(root = document) {
   function seekTo(seconds) {
     const duration = finiteDuration(media);
     if (!duration || !media.seekable?.length) {
-      railFeedback.textContent = 'SEEKING IS NOT AVAILABLE';
+      // iOS may expose seekable intervals after metadata/canplay even though
+      // the viewer already tapped the control. Retain that deliberate seek.
+      if (media && !media.error && !media.ended && media.readyState < 3) {
+        pendingSeek = { media, seconds, generation: mediaGeneration };
+        railFeedback.textContent = 'WAITING FOR VIDEO TO BECOME SEEKABLE';
+      } else {
+        railFeedback.textContent = 'SEEKING IS NOT AVAILABLE';
+      }
       return false;
     }
+    pendingSeek = null;
     // Do not seek outside the browser-provided seekable intervals (e.g. live windows).
     let target = clamp(Number(seconds) || 0, 0, duration);
     const ranges = media.seekable;
@@ -87,18 +97,19 @@ export function initFeatureDemos(root = document) {
 
   async function togglePlayback() {
     if (!media) return false;
-    if (!media.paused && !media.ended) {
-      media.pause();
-      sync();
+    const activeMedia = media;
+    if (!activeMedia.paused && !activeMedia.ended) {
+      activeMedia.pause();
+      if (media === activeMedia) sync();
       return true;
     }
     try {
       // The promise resolves only if the browser permits real playback.
-      await media.play();
-      sync();
+      await activeMedia.play();
+      if (media === activeMedia) sync();
       return true;
     } catch {
-      apertureState.textContent = 'PLAYBACK BLOCKED / TRY THE PLAYER ABOVE';
+      if (media === activeMedia) apertureState.textContent = 'PLAYBACK BLOCKED / TRY THE PLAYER ABOVE';
       return false;
     }
   }
@@ -117,13 +128,16 @@ export function initFeatureDemos(root = document) {
   async function runKey(key) {
     flashKey(key);
     if (!media) { accessFeedback.textContent = 'PLAYER UNAVAILABLE'; return; }
+    const activeMedia = media;
     if (key === 'toggle') {
       const worked = await togglePlayback();
+      if (media !== activeMedia) return;
       accessFeedback.textContent = worked ? `SPACE / ${media.paused ? 'PAUSED' : 'PLAYING'}` : 'SPACE / PLAYBACK BLOCKED';
     } else {
       const amount = key === 'back' ? -5 : 5;
       const worked = seekRelative(amount);
-      accessFeedback.textContent = worked ? `${amount < 0 ? '← BACK' : '→ FORWARD'} / ${shortTime(media.currentTime)}` : 'SEEK UNAVAILABLE';
+      accessFeedback.textContent = worked ? `${amount < 0 ? '← BACK' : '→ FORWARD'} / ${shortTime(media.currentTime)}`
+        : pendingSeek?.media === media ? 'WAITING FOR VIDEO / SEEK QUEUED' : 'SEEK UNAVAILABLE';
     }
   }
 
@@ -155,22 +169,36 @@ export function initFeatureDemos(root = document) {
   return {
     setMedia(nextMedia) {
       detachMedia();
+      mediaGeneration++;
+      pendingSeek = null;
       media = nextMedia || null;
       dragging = false;
       rail.classList.remove('is-dragging');
       railFeedback.textContent = 'PREPARING THE PRECISION RAIL';
       accessFeedback.textContent = 'READY / YOUR MOVE';
       if (media) {
-        const events = ['loadedmetadata', 'durationchange', 'timeupdate', 'play', 'pause', 'ended', 'seeked', 'progress', 'emptied'];
-        events.forEach(name => media.addEventListener(name, sync));
-        detachMedia = () => events.forEach(name => media?.removeEventListener(name, sync));
+        const boundMedia = media;
+        const checkPendingSeek = () => {
+          if (media !== boundMedia || !pendingSeek ||
+              pendingSeek.media !== boundMedia || pendingSeek.generation !== mediaGeneration) return;
+          if (!finiteDuration(boundMedia) || !boundMedia.seekable?.length) return;
+          const request = pendingSeek;
+          seekTo(request.seconds);
+          accessFeedback.textContent = 'SEEK READY / ' + shortTime(boundMedia.currentTime);
+        };
+        const events = ['loadedmetadata', 'durationchange', 'timeupdate', 'play', 'pause', 'ended', 'seeked', 'progress', 'emptied', 'canplay'];
+        const handler = () => { sync(); checkPendingSeek(); };
+        events.forEach(name => boundMedia.addEventListener(name, handler));
+        detachMedia = () => events.forEach(name => boundMedia.removeEventListener(name, handler));
       } else detachMedia = () => {};
       sync();
       // Already-loaded media may have seekable ranges but no subsequent metadata event.
       if (media?.readyState >= 1 && finiteDuration(media)) railFeedback.textContent = 'DRAG THE DIAMOND TO SEEK';
-      else if (media) media.addEventListener('loadedmetadata', () => {
-        if (media === nextMedia) railFeedback.textContent = 'DRAG THE DIAMOND TO SEEK';
-      }, {once: true});
+      else if (media) {
+        // The lifecycle listener above updates the timeline as the media loads.
+        // Avoid leaving a one-shot listener on a replaced iOS media element.
+        railFeedback.textContent = 'PREPARING SEEKABLE TIMELINE';
+      }
     }
   };
 }
