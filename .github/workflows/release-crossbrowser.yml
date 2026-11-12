@@ -7,14 +7,22 @@ on:
       - 'skin/**'
       - 'src/**'
       - 'examples/**'
-      - 'tests/release_crossbrowser.py'
+      - 'index.html'
+      - 'assets/**'
+      - 'worker/**'
+      - 'wrangler.toml'
+      - 'tests/**'
       - '.github/workflows/release-crossbrowser.yml'
   pull_request:
     paths:
       - 'skin/**'
       - 'src/**'
       - 'examples/**'
-      - 'tests/release_crossbrowser.py'
+      - 'index.html'
+      - 'assets/**'
+      - 'worker/**'
+      - 'wrangler.toml'
+      - 'tests/**'
 
 jobs:
   browser:
