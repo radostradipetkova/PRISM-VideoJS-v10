@@ -39,3 +39,16 @@ test('icon-only Playback trigger shares the neighboring icon sizing',()=>{
    assert.match(read(file),/border-color:transparent;gap:0/);
  }
 });
+
+// Keep the showcase and distributable skin aligned on tooltip lifecycle.
+test('tooltips follow scrolling and never attach to disabled or removed controls',()=>{
+  const showcase=read('src/control-hints.js');
+  const standalone=read('skin/control-hints.js');
+  assert.equal(showcase,standalone,'standalone skin hint runtime must match showcase');
+  assert.match(showcase,/document\.addEventListener\('scroll',update,true\)/);
+  assert.match(showcase,/document\.removeEventListener\('scroll',update,true\)/);
+  assert.match(showcase,/window\.addEventListener\('blur',hide\)/);
+  assert.match(showcase,/window\.removeEventListener\('blur',hide\)/);
+  assert.match(showcase,/!anchor\.isConnected/);
+  assert.match(showcase,/:disabled,\[aria-disabled="true"\],\[hidden\]/);
+});
