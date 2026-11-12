@@ -33,7 +33,9 @@ test('accurately shifted excerpt captions and authored chapters cover the 65-sec
 test('deployment includes optimized open film assets only after media has been prepared',()=>{
  assert.match(builder,/const optionalFilm=\[/);
  assert.match(builder,/stat\(path\.join\(root,'assets','tears-of-steel-excerpt\.mp4'\)\)/);
- assert.match(builder,/if\(m\.size>100000\)releaseAssets\.push\(\.\.\.optionalFilm\)/);
+ assert.match(builder,/if\(m\.size>100000\)/);
+ assert.match(builder,/liveActionExcerptReady=true/);
+ assert.match(builder,/prism-media-manifest\.json/);
  assert.match(builder,/tears-of-steel-fallback\.svg/);
  assert.match(builder,/tears-of-steel-full\.vtt/);
 });
