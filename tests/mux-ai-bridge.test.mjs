@@ -30,7 +30,7 @@ test('Mux bridge preserves static Cloudflare asset serving and scopes API routin
   const response=await worker.fetch(new Request(url),{ASSETS:{fetch:request=>new Response(request.url)}});
   assert.equal(await response.text(),url);
   const config=readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
-  assert.ok(config.includes('name = "prism-videojs-v10"'));
+  assert.ok(config.includes('name = "prism-opticaldeck"'));
   assert.ok(config.includes('main = "./worker/index.js"'));
   assert.ok(config.includes('run_worker_first = ["/api/*"]'));
   for(const file of ['src/optical-touch.js','skin/optical-touch.js']){
