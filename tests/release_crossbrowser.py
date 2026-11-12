@@ -41,8 +41,11 @@ async def check(browser_type, name, url, reportdir):
         skin_box=await page.locator('#player-a .prism-skin').bounding_box()
         assert box['x']>=skin_box['x']-1 and box['x']+box['width']<=skin_box['x']+skin_box['width']+1, 'Tooltip clipped horizontally'
         assert box['y']>=skin_box['y']-1 and box['y']+box['height']<=skin_box['y']+skin_box['height']+1, 'Tooltip clipped vertically'
-        await page.locator('#player-a .prism-skip.skip-back').hover()
-        assert await hint.inner_text()=='Back 5 seconds', 'Seek-back hover help missing'
+        # Reusable player-a is intentionally compact, so its skip buttons
+        # are hidden. Verify its markup here and hover visible buttons.
+        assert await page.locator('#player-a .prism-skip.skip-back').get_attribute('data-prism-hint')=='Back 5 seconds'
+        await page.locator('#player-a .prism-mute').hover()
+        assert await hint.inner_text() in ('Mute audio','Unmute audio'), 'Mute control help missing'
         await page.locator('#player-a .prism-time').hover()
         assert 'elapsed / total' in await hint.inner_text(), 'Time readout not explained'
         await page.locator('#player-a .prism-loop-trigger').hover()
@@ -302,6 +305,12 @@ async def check(browser_type, name, url, reportdir):
         await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
         mux=page.locator('#prism-mount mux-video.prism-media')
         await mux.wait_for(timeout=12000)
+        # Full showcase exposes the skip controls at desktop width.
+        await page.locator('#prism-mount .prism-skip.skip-back').hover()
+        showcase_hint=page.locator('#prism-mount .prism-control-hint')
+        assert await showcase_hint.inner_text()=='Back 5 seconds', 'Desktop skip-back tooltip missing'
+        await page.locator('#prism-mount .prism-skip.skip-forward').hover()
+        assert await showcase_hint.inner_text()=='Forward 5 seconds', 'Desktop skip-forward tooltip missing'
         # Adaptive Quality is part of Playback only for streams, not MP4s.
         assert await page.locator('#player-a .prism-quality-section').count()==0, 'MP4 unexpectedly offers manual quality'
         assert await page.locator('#player-b .prism-quality-section').count()==0, 'MP4 unexpectedly offers manual quality'
