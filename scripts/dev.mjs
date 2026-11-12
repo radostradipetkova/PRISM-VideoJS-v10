@@ -4,9 +4,7 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { dirname, extname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// CI can serve the optimized release with the same byte-range-safe server.
-const root = process.env.PRISM_SERVE_ROOT ? resolve(projectRoot,process.env.PRISM_SERVE_ROOT) : projectRoot;
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.PORT || 4173);
 const mime = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
