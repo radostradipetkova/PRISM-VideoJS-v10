@@ -411,6 +411,14 @@ async def check(browser_type, name, url, reportdir):
         # Cinematic's real storyboard is a deterministic fixture for the
         # identical sprite-rendering path used by the full Live Action film.
         outcomes['phase']='local cinematic reel / navigation'
+        # This dev-server test includes the authored full-film storyboard, but
+        # the generated manifest is produced only by the release builder.
+        # Tell the browser fixture which optional media truly exists on disk.
+        storyboard_ready=all((ROOT/'assets'/filename).is_file() for filename in (
+            'tears-of-steel-full-storyboard.jpg','tears-of-steel-full-storyboard.vtt'))
+        await page.route('**/assets/prism-media-manifest.json',lambda route:route.fulfill(
+            status=200,content_type='application/json',
+            body=json.dumps({'fullFilmStoryboard':storyboard_ready,'liveActionExcerpt':False})))
         await page.goto(url+'/?source=local',wait_until='domcontentloaded',timeout=25000)
         await page.locator('#prism-mount.prism-mount.is-ready').wait_for(timeout=30000)
         await page.wait_for_function('''() => {
