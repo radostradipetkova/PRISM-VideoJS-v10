@@ -72,42 +72,23 @@ export function initTypeMotion({root=document,viewport=window}={}) {
     if(!rec)return;
     const base=heading.getBoundingClientRect();
     const range=root.createRange();
-    const fontCache=new Map();
-    // READ phase: avoid interleaving Range geometry reads with hundreds of
-    // absolute glyph style writes, which can force repeated layout passes.
-    const measurements=rec.items.map(item=>{
+    for(const item of rec.items){
       range.setStart(item.node,item.start);
       range.setEnd(item.node,item.end);
       const rect=range.getBoundingClientRect();
-      const parent=item.node.parentElement;
-      let font=fontCache.get(parent);
-      if(!font){
-        const css=viewport.getComputedStyle(parent);
-        font={
-          fontFamily:css.fontFamily,fontSize:css.fontSize,
-          fontWeight:css.fontWeight,fontStyle:css.fontStyle,
-          letterSpacing:css.letterSpacing,lineHeight:css.lineHeight,
-          fontVariant:css.fontVariant
-        };
-        fontCache.set(parent,font);
-      }
-      return {item,left:rect.left-base.left,top:rect.top-base.top,
-        width:rect.width,height:rect.height,font};
-    });
-    // WRITE phase: the visual result and animation timing are unchanged.
-    for(const {item,left,top,width,height,font} of measurements){
-      const style=item.element.style;
-      style.left=`${left.toFixed(3)}px`;
-      style.top=`${top.toFixed(3)}px`;
-      style.width=`${width.toFixed(3)}px`;
-      style.height=`${height.toFixed(3)}px`;
-      style.fontFamily=font.fontFamily;
-      style.fontSize=font.fontSize;
-      style.fontWeight=font.fontWeight;
-      style.fontStyle=font.fontStyle;
-      style.letterSpacing=font.letterSpacing;
-      style.lineHeight=font.lineHeight;
-      style.fontVariant=font.fontVariant;
+      const css=viewport.getComputedStyle(item.node.parentElement);
+      const el=item.element;
+      el.style.left=`${(rect.left-base.left).toFixed(3)}px`;
+      el.style.top=`${(rect.top-base.top).toFixed(3)}px`;
+      el.style.width=`${rect.width.toFixed(3)}px`;
+      el.style.height=`${rect.height.toFixed(3)}px`;
+      el.style.fontFamily=css.fontFamily;
+      el.style.fontSize=css.fontSize;
+      el.style.fontWeight=css.fontWeight;
+      el.style.fontStyle=css.fontStyle;
+      el.style.letterSpacing=css.letterSpacing;
+      el.style.lineHeight=css.lineHeight;
+      el.style.fontVariant=css.fontVariant;
     }
   }
   function measureAll(){
