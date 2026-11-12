@@ -66,7 +66,7 @@ for (const [name,loader,options] of [
   const result=await transform(source,{
     loader,minify:true,charset:'utf8',legalComments:'inline',...options
   });
-  if(!result.code || result.errors.length)throw Error('Failed to optimize '+name);
+  if(!result.code)throw Error('Failed to optimize '+name);
   await writeFile(file,result.code);
   console.log('Optimized '+name+': '+source.length+' -> '+result.code.length+' characters');
 }
