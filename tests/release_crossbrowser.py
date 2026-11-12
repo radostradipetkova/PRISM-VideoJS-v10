@@ -29,7 +29,28 @@ async def check(browser_type, name, url, reportdir):
         await page.locator('#player-b.prism-mount.is-ready').wait_for(timeout=30000)
         outcomes['genuine_videojs_controls']=await page.locator('media-time-slider').count()==2
         assert outcomes['genuine_videojs_controls'], 'Video.js sliders were not registered'
-        # Play real local MP4s (muted, avoiding autoplay restrictions).
+        # First-visit discoverability: hover instructions without clicking.
+        # No duplicate PLAYBACK text: the compact icon still opens the menu.
+        speed=page.locator('#player-a .prism-settings-trigger')
+        assert await speed.locator('.prism-text-caption').count()==0, 'Playback button still has a text label'
+        await speed.hover()
+        hint=page.locator('#player-a .prism-control-hint')
+        await hint.wait_for(state='visible',timeout=5000)
+        assert 'Playback speed' in await hint.inner_text(), 'Playback control hint missing'
+        box=await hint.bounding_box()
+        skin_box=await page.locator('#player-a .prism-skin').bounding_box()
+        assert box['x']>=skin_box['x']-1 and box['x']+box['width']<=skin_box['x']+skin_box['width']+1, 'Tooltip clipped horizontally'
+        assert box['y']>=skin_box['y']-1 and box['y']+box['height']<=skin_box['y']+skin_box['height']+1, 'Tooltip clipped vertically'
+        await page.locator('#player-a .prism-skip.skip-back').hover()
+        assert await hint.inner_text()=='Back 5 seconds', 'Seek-back hover help missing'
+        await page.locator('#player-a .prism-time').hover()
+        assert 'elapsed / total' in await hint.inner_text(), 'Time readout not explained'
+        await page.locator('#player-a .prism-loop-trigger').hover()
+        assert 'Scene Loop' in await hint.inner_text(), 'Loop action not explained'
+        await page.locator('#player-a .prism-play').hover()
+        assert 'Play video' in await hint.inner_text(), 'Initial Play hint missing'
+        outcomes['contextual_control_hints_and_icon_only_playback']=True
+                # Play real local MP4s (muted, avoiding autoplay restrictions).
         for ident in ('a','b'):
             selector=f'#player-{ident} video.prism-media'
             await page.wait_for_function('(s)=>document.querySelector(s)?.readyState>=1',arg=selector,timeout=18000)

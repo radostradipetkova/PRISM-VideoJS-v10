@@ -5,6 +5,7 @@ import {initPlayerPreferences,normalizePreferences} from './player-preferences.j
 import {initSceneLoop} from './scene-loop.js';
 import {DEFAULT_REMEMBER_KEY,safeStorage,readRememberedSettings,saveRememberedSettings,clearRememberedSettings,normalizePlaybackRate} from './remember-settings.js';
 import {normalizeChapters} from './chapter-index.js';
+import {initControlHints} from './control-hints.js';
 /** PRISM — reusable HTML custom-element skin for genuine Video.js v10.
  * Requires @videojs/cdn@10.3.0/video.js (or equivalent @videojs/html package
  * registrations) before mounting. The media itself is the state source.
@@ -91,11 +92,11 @@ export function mountPrismPlayer(target, options={}) {
       <div class="prism-side-ruler" aria-hidden="true"><span>01</span><i></i><span>24</span></div>
       <media-controls>
         <media-controls-content class="prism-controls">
-          <media-play-button class="prism-center-play">
+          <media-play-button class="prism-center-play" data-prism-hint="play">
             <span class="prism-center-aperture" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
             <span class="prism-center-icon state-paused">${icon.play}</span><span class="prism-center-icon state-playing">${icon.pause}</span>
           </media-play-button>
-          <button class="prism-explore-launch" type="button" aria-haspopup="dialog" aria-label="Explore the video chapters" hidden aria-expanded="false"><span aria-hidden="true"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span> EXPLORE</button>
+          <button class="prism-explore-launch" data-prism-hint="Explore video chapters" type="button" aria-haspopup="dialog" aria-label="Explore the video chapters" hidden aria-expanded="false"><span aria-hidden="true"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span> EXPLORE</button>
           <div class="prism-gesture-feedback" aria-hidden="true"></div>
           <div class="prism-bottom">
             <div class="prism-dock">
@@ -105,7 +106,7 @@ export function mountPrismPlayer(target, options={}) {
                 <span class="prism-dock-state"><i></i><span class="prism-transport-state">STANDBY</span></span>
               </div>
             <div class="prism-rail-meta" aria-hidden="true"><span>00</span><span class="prism-rail-code">PRISM PRECISION RAIL <span class="prism-rail-arrow">↔</span> DRAG TO SEEK</span><span>END</span></div>
-            <media-time-slider class="prism-rail" step="1" large-step="10" thumb-alignment="edge" aria-label="Seek in video" aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight">
+            <media-time-slider class="prism-rail" data-prism-hint="seek" step="1" large-step="10" thumb-alignment="edge" aria-label="Seek in video" aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight">
               <media-slider-track class="prism-rail-track">
                 <media-slider-buffer class="prism-buffer"></media-slider-buffer>
                 <media-slider-fill class="prism-fill"></media-slider-fill>
@@ -123,18 +124,18 @@ export function mountPrismPlayer(target, options={}) {
             </media-time-slider>
             <media-controls-group class="prism-control-row" aria-label="Playback controls">
               <div class="prism-group-left">
-                <media-play-button class="prism-control prism-play">
+                <media-play-button class="prism-control prism-play" data-prism-hint="play">
                   <span class="state-paused">${icon.play}</span><span class="state-playing">${icon.pause}</span>
                 </media-play-button>
-                <media-seek-button class="prism-control prism-skip skip-back" seconds="-5" aria-label="Back five seconds">${icon.left}<small>5</small></media-seek-button>
-                <media-seek-button class="prism-control prism-skip skip-forward" seconds="5" aria-label="Forward five seconds">${icon.right}<small>5</small></media-seek-button>
-                <div class="prism-time" aria-label="Playback time"><media-time type="current"></media-time><span class="prism-time-divider">/</span><media-time type="duration"></media-time></div>
+                <media-seek-button class="prism-control prism-skip skip-back" data-prism-hint="Back 5 seconds" seconds="-5" aria-label="Back five seconds">${icon.left}<small>5</small></media-seek-button>
+                <media-seek-button class="prism-control prism-skip skip-forward" data-prism-hint="Forward 5 seconds" seconds="5" aria-label="Forward five seconds">${icon.right}<small>5</small></media-seek-button>
+                <div class="prism-time" data-prism-hint="Playback time · elapsed / total" aria-label="Playback time"><media-time type="current"></media-time><span class="prism-time-divider">/</span><media-time type="duration"></media-time></div>
               </div>
               <div class="prism-group-right">
-                <media-mute-button class="prism-control prism-mute">${state('mute-state',icon.mute,icon.sound)}</media-mute-button>
-                <media-volume-slider class="prism-volume" step="5" aria-label="Volume"><media-slider-track><media-slider-fill></media-slider-fill></media-slider-track><media-slider-thumb></media-slider-thumb></media-volume-slider>
+                <media-mute-button class="prism-control prism-mute" data-prism-hint="mute">${state('mute-state',icon.mute,icon.sound)}</media-mute-button>
+                <media-volume-slider class="prism-volume" data-prism-hint="Adjust volume" step="5" aria-label="Volume"><media-slider-track><media-slider-fill></media-slider-fill></media-slider-track><media-slider-thumb></media-slider-thumb></media-volume-slider>
                 <div class="prism-separator" aria-hidden="true"></div>
-                <button class="prism-control prism-settings-trigger" type="button" commandfor="${rateMenu}" aria-label="${muxPlaybackId||nativeQualityEnabled?'Playback speed and quality':'Playback speed'}" title="${muxPlaybackId||nativeQualityEnabled?'Playback speed and quality':'Playback speed'}">${icon.speed}<span class="prism-text-caption">${muxPlaybackId||nativeQualityEnabled?'PLAYBACK':'SPEED'}</span></button>
+                <button class="prism-control prism-settings-trigger" data-prism-hint="playback" type="button" commandfor="${rateMenu}" aria-label="${muxPlaybackId||nativeQualityEnabled?'Playback speed and quality':'Playback speed'}">${icon.speed}</button>
                 <media-menu id="${rateMenu}" class="prism-menu" side="top" align="end">
                   <media-menu-content><div class="prism-menu-title">PLAYBACK RATE</div><media-playback-rate-radio-group aria-label="Playback speed"><template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template></media-playback-rate-radio-group>
                     ${muxPlaybackId ? `<section class="prism-quality-section" aria-label="Video quality settings">
@@ -150,9 +151,9 @@ export function mountPrismPlayer(target, options={}) {
                       <p class="prism-quality-status" role="status" aria-live="polite" data-quality-status>Manual quality · playback position preserved.</p>
                     </section>` : ''}</media-menu-content>
                 </media-menu>
-                ${hasCaptions ? `<button class="prism-control prism-settings-trigger prism-captions-trigger" type="button" commandfor="${ccMenu}" aria-label="Caption tracks and settings">${icon.captions}</button>
+                ${hasCaptions ? `<button class="prism-control prism-settings-trigger prism-captions-trigger" data-prism-hint="Subtitles and caption settings" type="button" commandfor="${ccMenu}" aria-label="Caption tracks and settings">${icon.captions}</button>
                 <media-menu id="${ccMenu}" class="prism-menu prism-captions-menu" side="top" align="end"><media-menu-content>
-                  <div class="prism-caption-menu-heading"><button class="prism-caption-gear" type="button" aria-label="Caption appearance settings" aria-controls="${uid}-caption-appearance" aria-expanded="false" title="Caption appearance">${icon.gear}</button><span class="prism-menu-title">SUBTITLES</span></div>
+                  <div class="prism-caption-menu-heading"><button class="prism-caption-gear" data-prism-hint="Caption appearance settings" type="button" aria-label="Caption appearance settings" aria-controls="${uid}-caption-appearance" aria-expanded="false" >${icon.gear}</button><span class="prism-menu-title">SUBTITLES</span></div>
                   <div class="prism-caption-track-list" data-caption-track-list>
                     <media-captions-radio-group label="Captions"><template><media-menu-radio-item class="prism-menu-item"><span data-part="label"></span><media-menu-item-indicator force-mount>◆</media-menu-item-indicator></media-menu-radio-item></template></media-captions-radio-group>
                     <p class="prism-caption-track-status" data-caption-track-status role="status" aria-live="polite"></p>
@@ -173,7 +174,7 @@ export function mountPrismPlayer(target, options={}) {
                     <div class="prism-caption-preview" aria-hidden="true"><span class="prism-caption-sample">Every frame tells a story.</span></div>
                   </div>
                 </media-menu-content></media-menu>` : ''}
-                <button class="prism-control prism-loop-trigger" type="button" commandfor="${loopMenu}" aria-label="Scene loop controls" title="Scene Loop">${icon.loop}</button>
+                <button class="prism-control prism-loop-trigger" data-prism-hint="Scene Loop · repeat a chapter" type="button" commandfor="${loopMenu}" aria-label="Scene loop controls" >${icon.loop}</button>
                 <media-menu id="${loopMenu}" class="prism-menu prism-loop-menu" side="top" align="end"><media-menu-content>
                   <section class="prism-loop-group" data-loop-panel aria-label="Scene loop controls">
                     <div class="prism-loop-menu-heading"><div class="prism-menu-title">SCENE LOOP</div></div>
@@ -188,9 +189,9 @@ export function mountPrismPlayer(target, options={}) {
                     <button class="prism-loop-action prism-loop-stop" type="button" data-loop-off disabled>STOP LOOP</button>
                   </section>
                 </media-menu-content></media-menu>
-                <button class="prism-control prism-preferences-trigger" type="button" aria-haspopup="dialog" aria-label="Player preferences" aria-expanded="false" aria-controls="${prefMenu}" title="Player preferences">${icon.preferences}</button>
-                <media-pip-button class="prism-control prism-pip">${icon.pip}</media-pip-button>
-                <media-fullscreen-button class="prism-control prism-fullscreen">${state('fs-state',icon.fullscreenExit,icon.fullscreen)}</media-fullscreen-button>
+                <button class="prism-control prism-preferences-trigger" data-prism-hint="Player settings" type="button" aria-haspopup="dialog" aria-label="Player preferences" aria-expanded="false" aria-controls="${prefMenu}" >${icon.preferences}</button>
+                <media-pip-button class="prism-control prism-pip" data-prism-hint="Picture in Picture">${icon.pip}</media-pip-button>
+                <media-fullscreen-button class="prism-control prism-fullscreen" data-prism-hint="fullscreen">${state('fs-state',icon.fullscreenExit,icon.fullscreen)}</media-fullscreen-button>
               </div>
             </media-controls-group>
             <div class="prism-dock-foot" aria-hidden="true"><span>PRISM / TRANSPORT</span><span class="prism-tape-mark">◆ &nbsp; IMAGE FIRST &nbsp; / &nbsp; CONTROL ALWAYS</span><span class="prism-timecode-display">00:00</span></div>
@@ -265,7 +266,7 @@ export function mountPrismPlayer(target, options={}) {
       <media-status-announcer class="prism-a11y-announcer"></media-status-announcer>
       <div class="prism-dim-layer" aria-hidden="true"></div>
       <dialog class="prism-chapter-dialog" aria-label="Explore video navigation" aria-describedby="${uid}-index-help" data-index-layout="list">
-        <div class="prism-chapter-dialog-head"><span class="prism-index-heading">PRISM / OPTICAL INDEX</span><button class="prism-chapter-close" type="button" aria-label="Close chapter navigator">CLOSE ×</button></div>
+        <div class="prism-chapter-dialog-head"><span class="prism-index-heading">PRISM / OPTICAL INDEX</span><button class="prism-chapter-close" data-prism-hint="Close chapter navigator" type="button" aria-label="Close chapter navigator">CLOSE ×</button></div>
         <div class="prism-chapter-navigator">
           <div class="prism-iris" aria-hidden="true"><media-thumbnail class="prism-iris-thumbnail" time="0"></media-thumbnail><span class="prism-iris-center"><svg class="prism-mark-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 2v44M2 24h44M8.5 8.5l31 31m0-31-31 31"/></svg></span><span class="prism-iris-label">SELECT A FRAME</span></div>
           <div class="prism-index-search-wrap" hidden><label for="${uid}-search">FIND A CHAPTER</label><input id="${uid}-search" class="prism-index-search" type="search" placeholder="Search chapters or time" autocomplete="off" aria-label="Search video chapters"><span class="prism-index-result-count" role="status" aria-live="polite" aria-atomic="true"></span></div>
@@ -456,6 +457,7 @@ export function mountPrismPlayer(target, options={}) {
     actualCaptionNode?.addEventListener('load',initializeDefaultCaptions);
   const player = target.querySelector('video-player');
   const skin = target.querySelector('.prism-skin');
+  const controlHints=initControlHints({skin,media:mediaElement});
   // Escape dismisses a Tab-focused control's outline when no overlay is
   // active. Keep native Video.js menus, PRISM dialogs and fullscreen first.
   // Capture lets this work on Web Components that stop bubbling key events.
@@ -577,6 +579,7 @@ export function mountPrismPlayer(target, options={}) {
     isRememberingSettings(){return rememberEnabled;},
     destroy(){
     sceneLoop.destroy();
+    controlHints.destroy();
     nativeQualitySection?.removeEventListener('click',onNativeQualityClick);
     mediaElement.removeEventListener('loadedmetadata',onNativeQualityMetadata);
     mediaElement.removeEventListener('error',onNativeQualityError);

@@ -1350,3 +1350,28 @@
   .prism-skin .prism-native-quality-options{gap:3px}
   .prism-skin .prism-quality-option{min-height:44px;padding:9px 7px}
 }
+
+/* PRISM 3.0 — FIRST-TIME VIEWER CONTROL HINTS
+   One readable, collision-aware explanation per player. The hint lives at
+   media-container level, rather than inside overflow-clipped controls. */
+.prism-skin .prism-control-hint{
+  position:absolute;z-index:80;pointer-events:none;
+  display:block;box-sizing:border-box;
+  max-width:min(230px,calc(100% - 12px));width:max-content;
+  padding:8px 11px;
+  background:#20272a;color:#fff4e4;
+  border:1px solid #ed9567;
+  border-radius:2px;
+  box-shadow:0 7px 20px rgba(0,0,0,.5);
+  font:700 12px/1.35 'Courier New',monospace;
+  letter-spacing:.025em;text-align:center;white-space:normal;
+}
+.prism-skin .prism-control-hint[hidden]{display:none!important}
+@media (hover:none){
+  .prism-skin .prism-control-hint{font-size:12px}
+}
+@media (forced-colors:active){
+  .prism-skin .prism-control-hint{
+    background:Canvas;color:CanvasText;border:2px solid CanvasText
+  }
+}
