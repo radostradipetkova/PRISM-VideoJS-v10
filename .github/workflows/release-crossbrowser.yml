@@ -57,11 +57,11 @@ jobs:
       - name: Verify light/dark footage contrast and reduced motion
         if: matrix.browser == 'chromium'
         run: python tests/release_contrast_browser.py
-      - run: python tests/release_crossbrowser.py --browser ${{ matrix.browser }}
       - name: Verify Moment Stamp copied links restore the correct film and playhead
         run: |
           python -m py_compile tests/moment_stamp_browser.py
           python tests/moment_stamp_browser.py --browser ${{ matrix.browser }}
+      - run: python tests/release_crossbrowser.py --browser ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
