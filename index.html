@@ -6,7 +6,8 @@
   <link rel="icon" type="image/svg+xml" href="./assets/mark.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://stream.mux.com" crossorigin>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@videojs/cdn@10.3.0/global.css">
+  <!-- Version-pinned Video.js 10.3.0 global.css: 0.6 KB inlined to eliminate the blocking CDN stylesheet round trip. -->
+  <style>@property --media-slider-fill{syntax:"<percentage>";inherits:true;initial-value:0%}@property --media-slider-buffer{syntax:"<percentage>";inherits:true;initial-value:0%}video-player,live-video-player,media-i18n,media-dialog,media-alert-dialog,media-error-dialog,media-controls{display:contents}media-container video,media-container [slot=poster]{width:100%;height:100%;display:block}media-container video::-webkit-media-text-track-container{z-index:1;scale:.98;translate:0 var(--media-caption-track-y,0);transition:translate var(--media-caption-track-duration,0) ease-out;transition-delay:var(--media-caption-track-delay,0);font-family:inherit}</style>
   <link rel="stylesheet" href="./src/styles.css">
   <!-- First-paint guard: only JS-enabled, motion-capable sessions conceal
        the hero until the lightweight local typography module initializes.
