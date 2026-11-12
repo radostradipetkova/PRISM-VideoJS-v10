@@ -47,8 +47,8 @@ export function initFeatureDemos(root = document) {
     slider.max = String(duration ?? 1);
     if (!dragging) slider.value = String(duration ? clamp(time, 0, duration) : 0);
     rail.style.setProperty('--demo-progress', `${duration ? (clamp(time, 0, duration) / duration) * 100 : 0}%`);
-    currentTime.textContent = duration ? shortTime(time) : '--:--';
-    durationLabel.textContent = duration ? shortTime(duration) : '--:--';
+    currentTime.textContent = duration ? shortTime(time) : '00:00';
+    durationLabel.textContent = duration ? shortTime(duration) : '—';
     slider.setAttribute('aria-valuetext', duration ? `${shortTime(time)} of ${shortTime(duration)}` : 'Seeking unavailable');
 
     const playing = !!media && !media.paused && !media.ended;
@@ -57,8 +57,8 @@ export function initFeatureDemos(root = document) {
     apertureButton.setAttribute('aria-pressed', String(playing));
     apertureButton.disabled = !media;
     if (media) announce(apertureState, playing ? 'PLAYING / LIVE PLAYER' : media.ended ? 'ENDED / PRESS TO REPLAY' : 'PAUSED / PRESS TO PLAY');
-    else announce(apertureState, 'WAITING FOR THE LIVE PLAYER');
-    if (!duration) announce(railFeedback, media ? 'WAITING FOR SEEKABLE VIDEO' : 'CONNECTING TO THE LIVE VIDEO');
+    else announce(apertureState, 'PLAYER IS PREPARING');
+    if (!duration) announce(railFeedback, media ? 'PREPARING SEEKABLE TIMELINE' : 'CHOOSE A FILM TO ENABLE SEEKING');
   }
 
   function seekTo(seconds) {
@@ -158,7 +158,7 @@ export function initFeatureDemos(root = document) {
       media = nextMedia || null;
       dragging = false;
       rail.classList.remove('is-dragging');
-      railFeedback.textContent = 'CONNECTING TO THE LIVE VIDEO';
+      railFeedback.textContent = 'PREPARING THE PRECISION RAIL';
       accessFeedback.textContent = 'READY / YOUR MOVE';
       if (media) {
         const events = ['loadedmetadata', 'durationchange', 'timeupdate', 'play', 'pause', 'ended', 'seeked', 'progress', 'emptied'];

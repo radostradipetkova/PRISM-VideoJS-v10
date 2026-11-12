@@ -28,7 +28,7 @@ The original competition showcase remains in `index.html`.
 
 ---
 
-> **Latest audit (9 November 2026):** See [FINAL-ACCESSIBILITY-AUDIT.md](./FINAL-ACCESSIBILITY-AUDIT.md) for results, fixes, and remaining manual screen-reader checks.
+> **Latest audit (9 November 2026):** See [FINAL-ACCESSIBILITY-AUDIT.md](./docs/ACCESSIBILITY-VERIFICATION.md) for results, fixes, and remaining manual screen-reader checks.
 
 # PRISM 2.2 — Universal Video Fit
 
@@ -116,7 +116,7 @@ Run the typography-only Chromium test with `python tests/text_motion_browser.py`
 
 ### Legibility and touch-friendly controls (November 2026)
 
-The latest edition increases small labels, timecodes, chapter buttons, and control targets throughout the existing Optical Deck without changing Video.js components. All actionable transport buttons and the timeline have 44px minimum hit areas. Very narrow (≤330px) player containers present an unobstructed 16:9 video stage above a separate two-row control deck. See [`LEGIBILITY-UPDATE.md`](./LEGIBILITY-UPDATE.md) for details and Chromium checks.
+The latest edition increases small labels, timecodes, chapter buttons, and control targets throughout the existing Optical Deck without changing Video.js components. All actionable transport buttons and the timeline have 44px minimum hit areas. Very narrow (≤330px) player containers present an unobstructed 16:9 video stage above a separate two-row control deck. See [`LEGIBILITY-UPDATE.md`](./docs/ACCESSIBILITY-VERIFICATION.md) for details and Chromium checks.
 
 ## Keyboard shortcuts (showcase-wide Space fix — 10 November 2026)
 
@@ -146,15 +146,15 @@ Run `npm test` and `python tests/keyboard-aid-browser.py`. The browser fixture
 verifies focus, blank-page Space, normal focused controls, prevention of double
 toggles, media switching and cleanup **without downloading Video.js**. Validate
 real Video.js/Mux playback separately in Firefox and Chrome before submission.
-See [`KEYBOARD-ACCESS-UPDATE.md`](./KEYBOARD-ACCESS-UPDATE.md).
+See [`KEYBOARD-ACCESS-UPDATE.md`](./docs/ACCESSIBILITY-VERIFICATION.md).
 
 ## Mux hosting (public asset configured)
 
-The default **Cinematic Reel** uses the public Mux asset with Playback ID `i4NN2nQSVFk5TDkOtoLIfUUt2e6h5ah02j9ebYxzXxDM` via the official Video.js v10 `<mux-video>` media component. Night and Daylight remain local MP4 clips. Four timeline chapters and the English descriptive WebVTT are kept in source. See [`MUX-INTEGRATION.md`](./MUX-INTEGRATION.md) for the Mux manifest verification, install instructions, explicit local backup, and outstanding browser QA.
+The default **Cinematic Reel** uses the public Mux asset with Playback ID `i4NN2nQSVFk5TDkOtoLIfUUt2e6h5ah02j9ebYxzXxDM` via the official Video.js v10 `<mux-video>` media component. Night and Daylight remain local MP4 clips. Four timeline chapters and the English descriptive WebVTT are kept in source. See [`MUX-INTEGRATION.md`](./docs/MUX-STREAMING.md) for the Mux manifest verification, install instructions, explicit local backup, and outstanding browser QA.
 
 ## Pre-deployment audit (latest)
 
-See [`PRE-DEPLOY-AUDIT.md`](./PRE-DEPLOY-AUDIT.md) for the pass/fail results and mandatory live-browser sign-off.
+See [`PRE-DEPLOY-AUDIT.md`](./docs/RELEASE-VALIDATION.md) for the pass/fail results and mandatory live-browser sign-off.
 
 ```powershell
 npm.cmd test
@@ -167,11 +167,11 @@ Open `http://localhost:4173/?qa=1` to inspect your public Mux source and export 
 
 ## Final accessibility audit (8 Nov 2026)
 
-See [`A11Y-SIGNOFF.md`](./A11Y-SIGNOFF.md) for the verified keyboard/touch/contrast evidence and the still-required manual sign-off. This update explicitly registers and visually hides Video.js's `media-status-announcer` and improves small-text contrast in both themes. It preserves the same Mux stream, Optical Deck and website layout.
+See [`A11Y-SIGNOFF.md`](./docs/ACCESSIBILITY-VERIFICATION.md) for the verified keyboard/touch/contrast evidence and the still-required manual sign-off. This update explicitly registers and visually hides Video.js's `media-status-announcer` and improves small-text contrast in both themes. It preserves the same Mux stream, Optical Deck and website layout.
 
 
 ## Release verification (v2.3.1)
-See [`RELEASE-QUALITY-REPORT.md`](./RELEASE-QUALITY-REPORT.md) for verified browser/server checks, resolved bright-footage and buffering issues, and the outstanding Firefox/WebKit and new public staging sign-offs. The real-engine CI workflow is `.github/workflows/release-crossbrowser.yml`.
+See [`RELEASE-QUALITY-REPORT.md`](./docs/RELEASE-VALIDATION.md) for verified browser/server checks, resolved bright-footage and buffering issues, and the outstanding Firefox/WebKit and new public staging sign-offs. The real-engine CI workflow is `.github/workflows/release-crossbrowser.yml`.
 
 ### Fit / Fill — Video Fit
 
@@ -185,3 +185,12 @@ The **LIVE ACTION** option now has a working optical frame preview and a cinemat
 ## Mux AI chapters (opt-in)
 
 The Explore Optical Index now stays usable while remote metadata loads. To automatically produce **real AI chapter titles** for newly ingested Mux videos, configure a Mux Robots Directive for visual structure analysis → real chapter tracks. Full setup and security notes: [Mux AI Chapters](docs/MUX-AI-CHAPTERS.md). This integration requires your Mux API credentials and explicit directive attachment per upload; it is not activated merely by deploying this source.
+
+
+## Challenge submission handoff
+
+- [Final submission checklist](./docs/SUBMISSION-CHECKLIST.md) — public URL, Mux playback ID, visual explanation and manual sign-offs.
+- [Accessibility verification](./docs/ACCESSIBILITY-VERIFICATION.md) — implemented protections, automated coverage and remaining physical-device checks.
+- [Release validation](./docs/RELEASE-VALIDATION.md) — actual CI evidence and the limits of automated browser results.
+
+The Optical Deck uses readable hover/focus explanations without adding buttons. The Playback control remains icon-only. Both Mux and genuine multi-resolution MP4 sources can expose quality choices. PRISM never auto-plays decorative video in the background.

@@ -50,7 +50,11 @@
         </div>
         <div class="player-region">
           <div class="region-meta"><span>01 — THE EXPERIENCE</span><span>INTERACTIVE / LIVE PLAYER</span></div>
-          <div class="player-size-stage"><div class="player-wrap" id="player-wrap"><div id="prism-mount" class="prism-mount" aria-label="PRISM player demonstration"></div></div></div>
+          <div class="player-size-stage"><div class="player-wrap" id="player-wrap"><div id="prism-mount" class="prism-mount" aria-label="PRISM player demonstration"></div>
+              <noscript><div class="prism-noscript" role="note">
+                <img src="./assets/prism-cinematic.jpg" alt="PRISM cinematic reel preview: a frame from the original film">
+                <p><strong>PRISM is an interactive Video.js player.</strong> Enable JavaScript to explore the Optical Loupe, chapters and controls, or <a href="./assets/prism-cinematic.mp4">watch the original cinematic film directly</a>.</p>
+              </div></noscript></div></div>
           <div class="chapter-bar" role="group" aria-label="Jump to a scene in the cinematic showcase">
             <span class="chapter-bar-caption">EXPLORE THE FILM</span>
             <button type="button" data-chapter="0" aria-current="true"><span>01</span> NIGHT CITY <small>00:00</small></button>
@@ -85,7 +89,7 @@
           </div>
         </div>
       </section>
-      <section class="feature-intro" id="anatomy"><div class="section-index">02 / THE ANATOMY</div><div class="feature-title"><h2>NOT JUST<br>ANOTHER <em>BAR.</em></h2><p>What if the interface felt like a precision instrument? Familiar where it needs to be. Unmistakable where it counts.</p></div></section>
+      <section class="feature-intro" id="anatomy"><div class="section-index">02 / THE ANATOMY</div><div class="feature-title"><h2>NOT JUST<br>ANOTHER <em>BAR.</em></h2><p>Preview genuine video frames while seeking. Jump between chapters, loop a scene and keep playback precisely where you want it.</p></div></section>
       <section class="feature-grid" aria-label="PRISM signature features — interactive demonstrations">
         <article class="feature-card rail-card">
           <div class="feature-card-head"><span>01 / THE RAIL</span><span>— SIGNATURE ELEMENT</span></div>
@@ -96,8 +100,8 @@
               <div class="rail-mini-diamond" aria-hidden="true"></div>
               <input class="rail-mini-input" id="rail-demo-range" type="range" min="0" max="18" step="0.05" value="0" disabled aria-label="Seek in the actual PRISM video" aria-describedby="rail-demo-hint" aria-valuetext="Waiting for video">
             </div>
-            <div class="rail-mini-readouts"><output id="rail-demo-current" for="rail-demo-range">--:--</output><span id="rail-demo-duration">--:--</span></div>
-            <p class="feature-demo-feedback" id="rail-demo-hint" role="status" aria-live="polite">CONNECTING TO THE LIVE VIDEO</p>
+            <div class="rail-mini-readouts"><output id="rail-demo-current" for="rail-demo-range">00:00</output><span id="rail-demo-duration">—</span></div>
+            <p class="feature-demo-feedback" id="rail-demo-hint" role="status" aria-live="polite">PREPARING THE PRECISION RAIL</p>
           </div>
           <div class="feature-card-bottom"><h3>Precision,<br>in motion.</h3><p>Move the diamond to seek the actual video. Watch the time update, or use the arrow keys for five-second steps.</p></div>
         </article>
@@ -110,7 +114,7 @@
             <span class="aperture-cross" aria-hidden="true">+</span>
             <p class="aperture-demo-state" id="aperture-demo-state" role="status" aria-live="polite">PRESS TO PLAY THE LIVE VIDEO</p>
           </div>
-          <div class="feature-card-bottom"><h3>Let the<br>image breathe.</h3><p>One deliberate gesture. Press the aperture to play or pause the real film, with feedback that follows playback.</p></div>
+          <div class="feature-card-bottom"><h3>Let the<br>image breathe.</h3><p>Press the aperture to play or pause the actual film. Its state updates with playback—no decorative simulation.</p></div>
         </article>
         <article class="feature-card access-card" tabindex="0" aria-label="Keyboard shortcuts demonstration for the live PRISM video">
           <div class="feature-card-head"><span>03 / ACCESSIBILITY</span><span>— NOT AN ADD-ON</span></div>

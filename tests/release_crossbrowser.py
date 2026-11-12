@@ -72,6 +72,13 @@ async def check(browser_type, name, url, reportdir):
         await page.keyboard.press('Shift+Tab')
         await page.keyboard.press('Tab')
         assert await prefs.evaluate('(e)=>document.activeElement===e'), 'Tab did not focus preferences'
+        focus_style=await prefs.evaluate("""el=>{
+          const s=getComputedStyle(el);
+          return {outlineWidth:s.outlineWidth,outlineStyle:s.outlineStyle,boxShadow:s.boxShadow};
+        }""")
+        assert focus_style['outlineStyle']!='none' and focus_style['outlineWidth']!='0px',f'Missing focus outline: {focus_style}'
+        assert focus_style['boxShadow']!='none', f'Missing two-tone focus halo: {focus_style}'
+        outcomes['two_tone_keyboard_focus']=focus_style
         await page.keyboard.press('Escape')
         assert not await prefs.evaluate('(e)=>document.activeElement===e'), 'Escape left focus trapped on the control'
         assert await prefs.get_attribute('aria-expanded')=='false', 'Escape unexpectedly opened preferences'
@@ -298,6 +305,11 @@ async def check(browser_type, name, url, reportdir):
         transition=await page.locator('#player-b .prism-bottom').evaluate('e=>getComputedStyle(e).transitionDuration')
         assert all(float(part.rstrip('s'))==0 for part in transition.split(', ')),f'Unexpected reduced-motion transition {transition}'
         outcomes['reduced_motion']=True
+        optical_motion=await page.locator('#player-b .prism-iris-thumbnail').evaluate("""el=>{
+          const s=getComputedStyle(el); return {animation:s.animationName,transition:s.transitionDuration};
+        }""")
+        assert optical_motion['animation']=='none' and all(float(part.rstrip('s'))==0 for part in optical_motion['transition'].split(', ')), f'Optical preview still animated under reduced motion: {optical_motion}'
+        outcomes['optical_reduced_motion']=True
         assert not errors,f'Page JS errors: {errors}'
         outcomes['runtime_errors']=0
         # The default showcase uses mux-video rather than a native video tag.

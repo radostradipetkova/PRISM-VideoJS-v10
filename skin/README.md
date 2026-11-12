@@ -14,6 +14,7 @@ The `skin/` directory contains **only the player**—not the PRISM editorial lan
 | `index.js` | Public `mountPrismPlayer(target, options)` export |
 | `register-videojs.js` | Optional pinned CDN component registration helper |
 | `prism-player.js` | Native Video.js v10 skin markup and media plumbing |
+| `control-hints.js` | Contextual hover and keyboard-focus explanations for controls |
 | `optical-touch.js`, `chapter-index.js` | Loupe, gestures, adaptive Optical Index |
 | `player-preferences.js` | Built-in appearance, motion and touch settings with automatic accessibility defaults |
 | `scene-loop.js` | Video-independent chapter / IN-OUT looping; no dependency on demo media |
@@ -43,7 +44,7 @@ Copy `skin/` beside your HTML. Then load the official Video.js v10 global styles
 </script>
 ```
 
-Replace the example video and metadata paths with **your own media**. There is no dependency on PRISM's original 32-second film. For Mux, pass `muxPlaybackId:'YOUR_PUBLIC_PLAYBACK_ID'` instead of `src` (no secret keys). If there are no captions, supply `captions:null`. If there are no chapters, leave `chapters` empty and `chaptersVtt:null`; `EXPLORE` remains hidden. For neutral time markers, set `chapterMode:'time'`; to hide navigation set `chapterMode:'none'`.
+Replace the example video and metadata paths with **your own media**. There is no dependency on PRISM's original 32-second film. For Mux, pass `muxPlaybackId:'YOUR_PUBLIC_PLAYBACK_ID'` instead of `src` (no secret keys). The Playback menu then uses actual Mux HLS renditions. For a set of separate MP4 encodes, optionally pass `qualitySources:[{label:'720p',src:'./movie-720.mp4'},{label:'480p',src:'./movie-480.mp4'}]`. Each option must point to a real playable file; unlike Mux this is manual source switching, not adaptive bitrate. If there are no captions, supply `captions:null`. If there are no chapters, leave `chapters` empty and `chaptersVtt:null`; `EXPLORE` remains hidden. For neutral time markers, set `chapterMode:'time'`; to hide navigation set `chapterMode:'none'`.
 
 **Example:** `examples/reusable.html` mounts TWO separate instances, with distinct accent colors and media (wide MP4 without chapters/captions and portrait spoken MP4 with chapters/captions). Load at `http://localhost:4173/examples/reusable.html` after `npm.cmd run dev`.
 
