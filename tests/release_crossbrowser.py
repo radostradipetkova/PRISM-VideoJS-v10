@@ -304,6 +304,35 @@ async def check(browser_type, name, url, reportdir):
           };
         }""")
         outcomes['mux_native_quality_selector']=quality_diagnostics
+        if quality_diagnostics['manualAvailability']=='available' and quality_diagnostics['renditionCount']>=2:
+            # Select a *real* HLS rendition through Video.js, then restore
+            # Auto so normal bandwidth adaptation remains the user default.
+            speed_button=page.locator('#prism-mount .prism-settings-trigger[aria-label="Playback speed and quality"]')
+            await speed_button.click()
+            await page.wait_for_function("""() => document.querySelector(
+                '#prism-mount .prism-quality-group')?.closest('media-menu')?.hasAttribute('data-open')""",timeout=8000)
+            rendition480=quality.locator('media-menu-radio-item').filter(has_text='480p').first
+            await rendition480.wait_for(state='visible',timeout=8000)
+            await rendition480.click()
+            await page.wait_for_function("""() => {
+                const media=document.querySelector('#prism-mount mux-video.prism-media');
+                return Array.from(media?.videoRenditions||[]).some(r=>r.height===480 && r.selected);
+            }""",timeout=9000)
+            outcomes['mux_manual_480p_quality_selection']=True
+            quality_menu_open=await quality.evaluate(
+                "(el)=>el.closest('media-menu')?.hasAttribute('data-open')")
+            if not quality_menu_open:
+                await speed_button.click()
+            auto_choice=quality.locator('media-menu-radio-item').filter(has_text='Auto').first
+            await auto_choice.wait_for(state='visible',timeout=8000)
+            await auto_choice.click()
+            await page.wait_for_function("""() => {
+                const group=document.querySelector('#prism-mount .prism-quality-group');
+                const first=group?.querySelector('media-menu-radio-item');
+                return first?.getAttribute('aria-checked')==='true';
+            }""",timeout=9000)
+            outcomes['mux_auto_quality_restored']=True
+            await page.keyboard.press('Escape')
         mux_trigger=page.locator('#prism-mount .prism-captions-trigger')
         await mux_trigger.evaluate('(button)=>button.click()')
         await page.wait_for_function('document.querySelector("#prism-mount .prism-captions-menu")?.hasAttribute("data-open")',timeout=10000)
