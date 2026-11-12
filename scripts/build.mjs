@@ -2,7 +2,7 @@
  * Video.js is loaded from a version-pinned official CDN. This builder copies
  * runtime assets only: never publish source generators, tests or raw project files.
  */
-import {cp,mkdir,rm,stat} from 'node:fs/promises';
+import {cp,mkdir,rm,stat,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -24,21 +24,30 @@ const releaseAssets=['mark.svg','prism-cinematic.mp4','prism-cinematic.jpg','pri
  'coast-sunrise-storyboard.jpg','coast-sunrise-storyboard.vtt'];
 // Ship the full movie's timed JPG sprite and WebVTT only as a valid pair.
 const fullFilmStoryboard=['tears-of-steel-full-storyboard.jpg','tears-of-steel-full-storyboard.vtt'];
+let fullFilmStoryboardReady=false;
 try{
   const sprite=await stat(path.join(root,'assets',fullFilmStoryboard[0]));
   const cues=await stat(path.join(root,'assets',fullFilmStoryboard[1]));
-  if(sprite.size>10000 && cues.size>1000)releaseAssets.push(...fullFilmStoryboard);
+  if(sprite.size>10000 && cues.size>1000){releaseAssets.push(...fullFilmStoryboard);fullFilmStoryboardReady=true;}
 }catch(_){console.log('Full-film storyboard has not been prepared yet; native preview fallback remains available.');}
 // Only ship the open-film option when its locally prepared MP4 exists.
 // Never ship an empty placeholder or claim the licensed excerpt was bundled.
+let liveActionExcerptReady=false;
 const optionalFilm=['tears-of-steel-excerpt.mp4','tears-of-steel-poster.jpg',
  'tears-of-steel-storyboard.jpg','tears-of-steel-storyboard.vtt',
  'tears-of-steel-chapters.vtt','tears-of-steel-excerpt.vtt'];
 try{
  const m=await stat(path.join(root,'assets','tears-of-steel-excerpt.mp4'));
- if(m.size>100000)releaseAssets.push(...optionalFilm);
+ if(m.size>100000){releaseAssets.push(...optionalFilm);liveActionExcerptReady=true;}
 }catch(_){console.log('Optional licensed live-action film not yet prepared; run npm run prepare:film to add it.');}
 for(const file of releaseAssets){
  await cp(path.join(root,'assets',file),path.join(dst,'assets',file));
 }
 console.log(`Production static site assembled at ${dst}. Video.js CDN connectivity is required at runtime.`);
+
+// The build knows which optional assets actually exist. Serving this tiny JSON
+// avoids probing missing files and logging expected 404s.
+await writeFile(path.join(dst,'assets','prism-media-manifest.json'),JSON.stringify({
+ fullFilmStoryboard:fullFilmStoryboardReady,
+ liveActionExcerpt:liveActionExcerptReady
+})+'\n');
