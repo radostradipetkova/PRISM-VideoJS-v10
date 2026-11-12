@@ -20,7 +20,7 @@ export function createMomentUrl(href,seconds,film,{localCinematic=false}={}){
   const url=new URL(href);
   if(!['https:','http:'].includes(url.protocol))return null;
   url.searchParams.set('film',film);
-  url.searchParams.set('t',String(Math.round(seconds*10)/10));
+  url.searchParams.set('t',String(Math.round(seconds*100)/100));
   url.searchParams.delete('qa');
   if(film==='cinematic'){
     if(localCinematic)url.searchParams.set('source','local');
