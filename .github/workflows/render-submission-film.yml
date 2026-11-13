@@ -1,0 +1,51 @@
+name: PRISM Official Submission Film
+on:
+  push:
+    branches:
+      - submission-film-production-20261113
+    paths:
+      - scripts/record-submission.mjs
+      - scripts/edit-submission.py
+      - .github/workflows/render-submission-film.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    name: Capture real PRISM UI and render MP4
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install browser and editing dependencies
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install --with-deps chromium
+          python -m pip install numpy pillow
+          ffmpeg -version | head -n 1
+      - name: Capture real live-browser interactions
+        run: node scripts/record-submission.mjs
+      - name: Edit final submission film
+        run: python scripts/edit-submission.py
+      - name: Verify deliverables
+        run: |
+          test -s submission-film/PRISM_Official_Submission_1080p30.mp4
+          ffprobe -v error -show_entries format=duration,size -of json submission-film/PRISM_Official_Submission_1080p30.mp4
+          cat submission-film/coverage.json
+      - name: Upload film and capture report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PRISM-Official-Submission-Film
+          path: |
+            submission-film/PRISM_Official_Submission_1080p30.mp4
+            submission-film/coverage.json
+            submission-film/manifest.json
+          if-no-files-found: warn
+          retention-days: 30
