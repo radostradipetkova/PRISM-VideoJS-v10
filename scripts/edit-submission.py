@@ -94,7 +94,7 @@ for i,m in enumerate(manifest):
  try:
   run(['ffmpeg','-y','-loglevel','error','-ss',f'{lead:.3f}','-t',f'{take:.3f}', '-i',src,
    '-loop','1','-i',overlay,'-filter_complex',filt,'-map','[v]',
-   '-an','-r',FPS,'-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',dst])
+   '-t',f'{take:.3f}','-an','-r',FPS,'-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p',dst])
   entries.append(('file',dst))
   report.append({'scene':m['name'],'seconds':round(dur(dst),2),'status':'captured'})
  except Exception as e:
