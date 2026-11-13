@@ -6,7 +6,8 @@ import { chromium } from 'playwright';
 const ROOT='https://prism-videojs-v10.radostradi-pogo.workers.dev/';
 const OUT=path.resolve('submission-film/raw');
 await fs.mkdir(OUT,{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--disable-dev-shm-usage']});
+const launchOptions={headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--disable-dev-shm-usage']};
+const browser=await chromium.launch({...launchOptions,channel:'chrome'}).catch(()=>chromium.launch(launchOptions));
 const manifest=[];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function safe(tag,fn){
@@ -116,7 +117,7 @@ await snap('06_CAPTION_STUDIO','CAPTIONS, RECONSIDERED.',async(page,p)=>{
  await sleep(900);
  await safe('caption appearance',()=>page.getByRole('button',{name:'Caption appearance settings'}).click());
  await sleep(850);
- await safe('size Large',()=>page.getByRole('menuitemradio',{name:/Large|LARGE|^L$/}).first().click());
+ await safe('size Large',()=>page.getByText(/Large|^L$/).last().click());
  await sleep(800);
  await safe('caption menu again',()=>openMenu(page,'Caption tracks and settings'));
  await sleep(850);
@@ -127,11 +128,11 @@ await snap('06_CAPTION_STUDIO','CAPTIONS, RECONSIDERED.',async(page,p)=>{
 await snap('07_LIQUID_AND_SOLID','AN INTERFACE THAT ADAPTS.',async(page,p)=>{
  await openMenu(page,'Player preferences');
  await sleep(900);
- await safe('Solid',()=>page.getByRole('menuitemradio',{name:/Solid/}).click());
+ await safe('Solid',()=>page.getByText('Solid',{exact:true}).last().click());
  await sleep(1150);
  await openMenu(page,'Player preferences');
  await sleep(800);
- await safe('Liquid Glass',()=>page.getByRole('menuitemradio',{name:/Liquid Glass/}).click());
+ await safe('Liquid Glass',()=>page.getByText('Liquid Glass',{exact:true}).last().click());
  await sleep(1000);
  await openMenu(page,'Player preferences');
  await sleep(800);
@@ -140,10 +141,10 @@ await snap('07_LIQUID_AND_SOLID','AN INTERFACE THAT ADAPTS.',async(page,p)=>{
 await snap('08_FIT_AND_FILL','YOUR FRAME. YOUR VIEW.',async(page,p)=>{
  await openMenu(page,'Player preferences');
  await sleep(700);
- await safe('Fill crop',()=>page.getByRole('menuitemradio',{name:/Fill.*Crop/}).click());
+ await safe('Fill crop',()=>page.getByText(/Fill.*Crop/).last().click());
  await sleep(1200);
  await openMenu(page,'Player preferences');
- await safe('Fit full frame',()=>page.getByRole('menuitemradio',{name:/Fit.*Full Frame/}).click());
+ await safe('Fit full frame',()=>page.getByText(/Fit.*Full Frame/).last().click());
  await sleep(1100);
 });
 
@@ -172,7 +173,7 @@ await snap('11_SEEK_VOLUME','ESSENTIALS. BEAUTIFULLY DONE.',async(page,p)=>{
  await page.getByRole('button',{name:'Mute',exact:true}).click();await sleep(750);
  await safe('unmute',()=>page.getByRole('button',{name:'Unmute',exact:true}).click());await sleep(700);
  const v=page.getByRole('slider',{name:'Volume',exact:true});
- await safe('set volume',()=>v.fill('45'));await sleep(1100);
+ await safe('set volume',()=>(async()=>{const b=await v.boundingBox();if(!b)throw Error('Volume slider hidden');await page.mouse.click(b.x+b.width*.45,b.y+b.height/2);})());await sleep(1100);
 });
 
 await snap('12_FOUR_WORLDS','ONE SKIN. FOUR WORLDS.',async(page,p)=>{
@@ -214,6 +215,37 @@ await snap('15_ANATOMY','MORE THAN ANOTHER BAR.',async(page,p)=>{
  await safe('anatomy play',()=>page.getByRole('button',{name:/Play video|Pause video/}).click());
  await sleep(1300);
 });
+
+await snap('16_MOMENT_STAMP','SAVE A MOMENT. SHARE A FRAME.',async(page,p)=>{
+ await safe('play',()=>page.getByRole('button',{name:'Play',exact:true}).last().click());
+ await sleep(1350);
+ await safe('moment stamp',()=>page.getByRole('button',{name:/Copy a link to this film/}).click());
+ await sleep(1650);
+});
+
+await snap('17_FULLSCREEN_AND_PIP','THE FILM, EVERYWHERE.',async(page,p)=>{
+ await safe('enter fullscreen',()=>page.getByRole('button',{name:/Enter fullscreen/}).click());
+ await sleep(1350);
+ await page.keyboard.press('Escape');
+ await sleep(850);
+ await safe('picture in picture',()=>page.getByRole('button',{name:/Enter picture-in-picture/}).click());
+ await sleep(1400);
+});
+
+await snap('18_KEYBOARD_GUIDE','BUILT FOR KEYBOARD AND TOUCH.',async(page,p)=>{
+ await openMenu(page,'Player preferences');await sleep(700);
+ await safe('keyboard guide',()=>page.getByRole('button',{name:/Keyboard guide|Keyboard shortcuts|Keyboard controls/}).click());
+ await sleep(1400);
+ await page.keyboard.press('Escape');await sleep(700);
+});
+
+await snap('19_MOBILE_GESTURES','GESTURES THAT FEEL NATURAL.',async(page,p)=>{
+ const b=await p.boundingBox();if(!b)return;
+ await page.touchscreen.tap(b.x+b.width*.25,b.y+b.height*.49);await sleep(100);
+ await page.touchscreen.tap(b.x+b.width*.25,b.y+b.height*.49);await sleep(1400);
+ await page.touchscreen.tap(b.x+b.width*.75,b.y+b.height*.49);await sleep(100);
+ await page.touchscreen.tap(b.x+b.width*.75,b.y+b.height*.49);await sleep(1450);
+},{mobile:true});
 
 await browser.close();
 await fs.writeFile('submission-film/manifest.json',JSON.stringify(manifest,null,2));

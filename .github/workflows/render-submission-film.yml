@@ -28,7 +28,9 @@ jobs:
           npm install --no-save --no-package-lock playwright@latest
           npx playwright install chromium
           python -m pip install numpy pillow
-          ffmpeg -version | head -n 1
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
       - name: Capture real live-browser interactions
         run: node scripts/record-submission.mjs
       - name: Edit final submission film
