@@ -67,3 +67,12 @@ test('Timeline never triggers the instructional tooltip; Optical Scan and access
   assert.match(player,/data-prism-hint="mute"/);
  }
 });
+
+test('Optical Loupe hover clears stale keyboard-focus control help',()=>{
+ for(const part of ['src','skin']){
+  const hints=read(part+'/control-hints.js');
+  assert.match(hints,/if\(event\.target\.closest\?\.\('\.prism-rail'\)\)\{hide\(\);return;\}/);
+  assert.match(hints,/if\(event\.pointerType==='touch'\)return;/);
+  assert.match(hints,/const element=event\.target\.closest\?\.\('\[data-prism-hint\]'\)/);
+ }
+});
