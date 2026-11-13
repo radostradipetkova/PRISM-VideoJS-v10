@@ -25,8 +25,8 @@ jobs:
           python-version: '3.11'
       - name: Install browser and editing dependencies
         run: |
-          npm install --no-save --no-package-lock playwright@1.58.2
-          npx playwright install --with-deps chromium
+          npm install --no-save --no-package-lock playwright@latest
+          npx playwright install chromium
           python -m pip install numpy pillow
           ffmpeg -version | head -n 1
       - name: Capture real live-browser interactions
