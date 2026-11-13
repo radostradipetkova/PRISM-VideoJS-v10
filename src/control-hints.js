@@ -57,6 +57,9 @@ export function initControlHints({skin,media}){
   }
   function onPointerOver(event){
     if(event.pointerType==='touch')return;
+    // A keyboard-focused button can leave its tooltip open while the mouse
+    // enters the precision rail. Give Optical Loupe the entire hover surface.
+    if(event.target.closest?.('.prism-rail')){hide();return;}
     const element=event.target.closest?.('[data-prism-hint]');
     if(!element || !skin.contains(element))return;
     if(element===anchor && mode==='hover')return;
