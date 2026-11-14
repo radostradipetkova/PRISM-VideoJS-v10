@@ -50,6 +50,9 @@ async function main() {
   await page.locator('#prism-mount .prism-skin').waitFor({state:'visible',timeout:30000});
 
   await page.evaluate(()=>{
+    const mount=document.querySelector('#prism-mount');
+    // Lift the live player out of ancestor stacking contexts so the backdrop stays behind it.
+    if(mount)document.body.appendChild(mount);
     const back=document.createElement('div');
     back.id='prism-recording-matte';
     back.style.cssText='position:fixed;inset:0;background:#0b0e12;z-index:2147483000;pointer-events:none;';
