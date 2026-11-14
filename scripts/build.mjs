@@ -9,7 +9,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const dst=path.join(root,'dist');
 await rm(dst,{recursive:true,force:true});
 await mkdir(path.join(dst,'assets'),{recursive:true});
-for(const item of ['index.html','src','skin','examples','_headers']){
+for(const item of ['index.html','src','skin','examples','portfolio','_headers']){
  await cp(path.join(root,item),path.join(dst,item),{recursive:true});
 }
 // Release contains ONLY referenced public media, not legacy motion studies or generators.
