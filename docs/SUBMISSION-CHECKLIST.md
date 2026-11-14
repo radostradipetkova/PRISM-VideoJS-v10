@@ -4,7 +4,9 @@ Deadline listed by [Contra](https://contra.com/community/topic/videojsskinschall
 
 ## Submission details
 
-- Public showcase: https://prism-opticaldeck.radostradi-pogo.workers.dev/
+- Public showcase (verified working): https://prism-videojs-v10.radostradi-pogo.workers.dev/
+- Independent live portfolio running the PRISM skin: https://radostina-selected-work-463c0e98.base44.app/
+- Portfolio source included in this repository under `portfolio/` (also deployed independently on Base44).
 - GitHub source: https://github.com/radostradipetkova/PRISM-VideoJS-v10
 - Public Mux playback ID: `i4NN2nQSVFk5TDkOtoLIfUUt2e6h5ah02j9ebYxzXxDM`
 - Portable Video.js v10 skin: `skin/`, with `skin/LICENSE` (Apache 2.0), `skin/README.md` and `npm run build:skin`.
