@@ -67,7 +67,7 @@ async function main() {
   });
   const video=()=>page.locator('#prism-mount mux-video, #prism-mount video').first();
   const film=async id=>{
-    await page.locator('[data-film="'+id+'"]').click();
+    await page.locator('[data-film="'+id+'"]').evaluate(el=>el.click());
     await delay(page,950);
   };
   const setTime=async n=>{
