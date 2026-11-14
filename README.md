@@ -1,4 +1,4 @@
-> **Public showcase:** [PRISM — Optical Deck](https://prism-opticaldeck.radostradi-pogo.workers.dev/) · **Source:** [GitHub main](https://github.com/radostradipetkova/PRISM-VideoJS-v10)
+> **Public showcase:** [PRISM — Optical Deck](https://prism-videojs-v10.radostradi-pogo.workers.dev/) · **Portfolio integration:** [Selected Work](https://radostina-selected-work-463c0e98.base44.app/) · **Source:** [GitHub main](https://github.com/radostradipetkova/PRISM-VideoJS-v10)
 >
 > **Deployment note (12 November 2026):** `wrangler.toml` targets the existing `prism-opticaldeck` Worker. GitHub Actions tests/builds code but does not deploy the Worker. Cloudflare's own Git integration or an authenticated `wrangler deploy` is required. Follow the [deployment checklist](PRISM-GITHUB-CLOUDFLARE-SETUP.md) and verify the public URL matches the latest commit.
 
